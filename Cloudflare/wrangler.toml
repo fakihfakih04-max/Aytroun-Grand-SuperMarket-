@@ -1,15 +1,13 @@
-name = "aytroun-store-api"
+name = "aytroun-api"
 main = "worker.js"
-compatibility_date = "2026-11-17"
+compatibility_date = "2026-11-18"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "aytroun-store"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_name = "aytroun-db"
+database_id = "6d8ce2a2-21a4-41bc-87a7-d74a0d0254a1"
 
+# Create this R2 bucket in Cloudflare, then keep this binding enabled.
 [[r2_buckets]]
 binding = "IMAGES"
-bucket_name = "aytroun-store-images"
-
-[vars]
-ALLOWED_ORIGIN = "https://YOUR-GITHUB-USERNAME.github.io"
+bucket_name = "aytroun-images"
