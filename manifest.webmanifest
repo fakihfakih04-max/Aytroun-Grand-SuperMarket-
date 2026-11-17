@@ -1,0 +1,9 @@
+{
+  "name": "SFF Customer Store",
+  "short_name": "SFF Store",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f8f6",
+  "theme_color": "#10251f",
+  "description": "SFF Customer Store"
+}
