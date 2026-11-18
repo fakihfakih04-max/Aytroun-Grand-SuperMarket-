@@ -97,7 +97,40 @@ function qty(k,d){let x=cart.find(i=>i.key===k);if(!x)return;let p=products.find
 cartBtn.onclick=()=>overlay.classList.add("open");close.onclick=()=>overlay.classList.remove("open");overlay.onclick=e=>{if(e.target===overlay)overlay.classList.remove("open")};
 search.oninput=()=>{visibleLimit=60;draw()};category.onchange=()=>{visibleLimit=60;draw()};sort.onchange=()=>{visibleLimit=60;draw()};
 document.querySelectorAll('[name="method"]').forEach(x=>x.onchange=()=>{addressWrap.style.display=document.querySelector('[name="method"]:checked').value==="Delivery"?"grid":"none";updateDelivery()});
-checkout.onsubmit=async e=>{e.preventDefault();if(!cart.length)return toast("Your cart is empty");let wa=String(storeSettings.phone||CFG.WHATSAPP_NUMBER||"").replace(/\D/g,"");if(!wa)return toast("Set company WhatsApp number in Admin");let method=document.querySelector('[name="method"]:checked').value,addr=address.value.trim(),area=selectedArea();if(method==="Delivery"&&(!addr||!area))return toast("Choose delivery area and enter address");let grouped={};cart.forEach(x=>{let p=products.find(y=>String(y.id)===x.id),c=p.currency||"USD";if(!(p.unit_type==='KG'&&p.weight_mode==='employee'))grouped[c]=(grouped[c]||0)+Number(price(p,x.unit)||0)*x.qty});let fee=method==="Delivery"?Number(area?.fee||0):0;let orderItems=cart.map(x=>{let p=products.find(y=>String(y.id)===x.id);return {id:x.id,name:p.name,unit:x.unit,qty:x.qty,price:Number(price(p,x.unit)||0),currency:p.currency||"USD",unit_type:p.unit_type||"PC"}});let lines=[`*${storeSettings.store_name||CFG.STORE_NAME||"AYTROUN GRAND SUPERMARKET"} - NEW ORDER*`,"",`Customer: ${custName.value}`,`Phone: ${phone.value}`,`Method: ${method}`];if(method==="Delivery")lines.push(`Area: ${area.name}`,`Delivery fee: ${money(fee,area.currency)}`,`Address: ${addr}`);lines.push("","*ORDER ITEMS*");orderItems.forEach((x,i)=>lines.push(`${i+1}. ${x.name} | ${x.qty} x ${x.weight_mode==='employee'?'piece(s) · weight pending':x.unit.toUpperCase()} | ${x.weight_mode==='employee'?'price after weighing':money(x.price,x.currency)}`));Object.entries(grouped).forEach(([c,v])=>lines.push(`Subtotal ${c}: ${money(v,c)}`));if(notes.value.trim())lines.push("",`Notes: ${notes.value.trim()}`);let orderId="";if(CFG.API_URL&&!CFG.API_URL.includes("YOUR-WORKER")){try{let r=await fetch(CFG.API_URL+"/api/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({customer_name:custName.value,phone:phone.value,method,area:area?.name||"",address:addr,notes:notes.value,items:orderItems,subtotals:grouped,delivery_fee:fee,delivery_currency:area?.currency||"USD"})});let d=await r.json();if(r.ok)orderId=d.id;else console.warn(d)}catch(err){console.warn("Order API unavailable",err)}}if(orderId)lines.splice(1,0,`Order ID: ${orderId}`);lines.push("","Please confirm this order.");window.open("https://wa.me/"+wa+"?text="+encodeURIComponent(lines.join("\n")),"_blank")};
+checkout.onsubmit=async e=>{
+ e.preventDefault();
+ if(!cart.length)return toast("Your cart is empty");
+ let wa=String(storeSettings.phone||CFG.WHATSAPP_NUMBER||"").replace(/\D/g,"");
+ if(!wa)return toast("Set company WhatsApp number in Admin");
+ let method=document.querySelector('[name="method"]:checked').value,addr=address.value.trim(),area=selectedArea();
+ if(!custName.value.trim()||!phone.value.trim())return toast("Enter customer name and phone number");
+ if(method==="Delivery"&&(!addr||!area))return toast("Choose delivery area and enter address");
+ let grouped={};
+ cart.forEach(x=>{let p=products.find(y=>String(y.id)===x.id),c=p.currency||"USD";if(!(p.unit_type==='KG'&&p.weight_mode==='employee'))grouped[c]=(grouped[c]||0)+Number(price(p,x.unit)||0)*x.qty});
+ let fee=method==="Delivery"?Number(area?.fee||0):0;
+ let orderItems=cart.map(x=>{let p=products.find(y=>String(y.id)===x.id);return {id:x.id,name:p.name,unit:x.unit,qty:x.qty,price:Number(price(p,x.unit)||0),currency:p.currency||"USD",unit_type:p.unit_type||"PC",weight_mode:p.weight_mode||"customer"}});
+ let lines=[`*${storeSettings.store_name||CFG.STORE_NAME||"AYTROUN GRAND SUPERMARKET"} - NEW ORDER*`,"",`Customer: ${custName.value.trim()}`,`Phone: ${phone.value.trim()}`,`Method: ${method}`];
+ if(method==="Delivery")lines.push(`Area: ${area.name}`,`Delivery fee: ${money(fee,area.currency)}`,`Address: ${addr}`);
+ lines.push("","*ORDER ITEMS*");
+ orderItems.forEach((x,i)=>lines.push(`${i+1}. ${x.name} | ${x.qty} x ${x.weight_mode==='employee'?'piece(s) · weight pending':x.unit.toUpperCase()} | ${x.weight_mode==='employee'?'price after weighing':money(x.price,x.currency)}`));
+ Object.entries(grouped).forEach(([c,v])=>lines.push(`Subtotal ${c}: ${money(v,c)}`));
+ if(notes.value.trim())lines.push("",`Notes: ${notes.value.trim()}`);
+ lines.push("","Please confirm this order.");
+ const makeWhatsAppUrl=()=>"https://wa.me/"+wa+"?text="+encodeURIComponent(lines.join("\n"));
+ // Open synchronously during the button tap. Opening after await is blocked by many mobile browsers.
+ let waWindow=null;
+ try{waWindow=window.open("about:blank","_blank");if(waWindow)waWindow.opener=null;}catch(err){console.warn("WhatsApp window open",err)}
+ const fallbackToWhatsApp=()=>{const url=makeWhatsAppUrl();if(waWindow&&!waWindow.closed){waWindow.location.href=url;}else{window.location.href=url;}};
+ let orderId="";
+ if(CFG.API_URL&&!CFG.API_URL.includes("YOUR-WORKER")){
+  try{
+   let r=await fetch(CFG.API_URL+"/api/orders",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({customer_name:custName.value.trim(),phone:phone.value.trim(),method,area:area?.name||"",address:addr,notes:notes.value,items:orderItems,subtotals:grouped,delivery_fee:fee,delivery_currency:area?.currency||"USD",totals:grouped})});
+   let d=await r.json();if(r.ok)orderId=d.id;else console.warn("Order save failed",d);
+  }catch(err){console.warn("Order API unavailable",err)}
+ }
+ if(orderId)lines.splice(1,0,`Order ID: ${orderId}`);
+ fallbackToWhatsApp();
+};
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;install.hidden=false;install.onclick=async()=>{installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;install.hidden=true}});
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));setTimeout(()=>document.getElementById("splash")?.classList.add("hide"),2200);load().catch(()=>document.getElementById("splash")?.classList.add("hide"));
 </script></body></html>
