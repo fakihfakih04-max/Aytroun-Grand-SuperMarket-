@@ -15,12 +15,15 @@ export default {async fetch(req,env){if(req.method==='OPTIONS')return new Respon
  if(p.startsWith('/api/')&&!await authorized(req,env))return json({error:'Unauthorized'},401);
  if(p==='/api/admin/import-products'&&req.method==='POST'){
   const b=await req.json();
-  if(!Array.isArray(b.items)||b.items.length<1||b.items.length>50)return json({error:'Send between 1 and 50 products per request'},400);
-  const stmt=env.DB.prepare(`INSERT INTO products(id,name,category,code,barcode,currency,image,pc,pac,box,pac_qty,box_qty,description,quantity,available,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,code=excluded.code,barcode=excluded.barcode,currency=excluded.currency,pc=excluded.pc,pac=excluded.pac,box=excluded.box,pac_qty=excluded.pac_qty,box_qty=excluded.box_qty,description=excluded.description,quantity=excluded.quantity,available=excluded.available,updated_at=CURRENT_TIMESTAMP`);
+  if(!Array.isArray(b.items)||b.items.length<1||b.items.length>5)return json({error:'Send between 1 and 5 products per request'},400);
+  const stmt=env.DB.prepare(`INSERT INTO products(id,name,category,code,barcode,currency,image,pc,pac,box,pac_qty,box_qty,description,quantity,available,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET name=excluded.name,category=excluded.category,code=excluded.code,barcode=excluded.barcode,currency=excluded.currency,image=CASE WHEN excluded.image IS NOT NULL AND excluded.image<>'' THEN excluded.image ELSE products.image END,pc=excluded.pc,pac=excluded.pac,box=excluded.box,pac_qty=excluded.pac_qty,box_qty=excluded.box_qty,description=excluded.description,quantity=excluded.quantity,available=excluded.available,updated_at=CURRENT_TIMESTAMP`);
   let count=0;
   for(const x of b.items){
    if(!x.id||!x.name)continue;
-   await stmt.bind(String(x.id),String(x.name),x.category||'',x.code||'',x.barcode||'',x.currency||'USD','',x.pc??null,x.pac??null,x.box??null,x.pac_qty??null,x.box_qty??null,x.description||'',Number(x.quantity||0),Number(x.available??1)).run();
+   const image=String(x.image||'');
+   if(image.length>450000)return json({error:'Compressed image too large for D1 row: '+String(x.name)},413);
+   const qty=Number(x.quantity||0);
+   await stmt.bind(String(x.id),String(x.name),x.category||'',x.code||'',x.barcode||'',x.currency||'USD',image,x.pc??null,x.pac??null,x.box??null,x.pac_qty??null,x.box_qty??null,x.description||'',qty,qty>0?1:0).run();
    count++;
   }
   return json({ok:true,imported:count});
