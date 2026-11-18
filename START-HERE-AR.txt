@@ -1,36 +1,34 @@
-مشروع تعاونية عيترون الكبرى - حزمة GitHub + Cloudflare
+مشروع تعاونية عيترون الكبرى
 
-مهم:
-- واجهة المتجر على GitHub Pages.
-- Backend الحالي على Cloudflare Worker: https://aytroun-api.fakihfakih04.workers.dev
-- قاعدة D1 الحالية: aytroun-db (مرتبطة بالـ Worker بالاسم DB).
-- المشروع مستقل تماماً عن SFF ERP ولا يقرأ أو يعدّل قاعدة بياناته.
+النسخة الحالية لا تحتاج R2 ولا بطاقة دفع لتخزين الصور:
+- صور المنتجات واللوغو يتم ضغطها داخل المتصفح ثم حفظها في D1.
+- اختر صوراً معقولة الحجم؛ لوحة الإدارة ترفض الصورة إذا تجاوزت 500KB بعد الضغط.
+- قاعدة البيانات: aytroun-db
+- Worker: aytroun-api
+- D1 binding: DB
+- أسرار Worker: ADMIN_PASSWORD و JWT_SECRET
 
-قبل التشغيل الكامل:
-1) ارفع محتويات هذا المجلد إلى مستودع GitHub (لا ترفع ملف ZIP نفسه كصفحة موقع).
-2) فعّل GitHub Pages من إعدادات المستودع واختر الفرع main والمجلد root.
-3) قاعدة D1 تحتاج تشغيل cloudflare/schema.sql مرة واحدة من D1 > aytroun-db > Console.
-4) في Worker aytroun-api أضف Secrets:
-   ADMIN_PASSWORD = كلمة سر قوية تختارها أنت
-   JWT_SECRET = قيمة عشوائية طويلة جداً (32 حرفاً أو أكثر)
-5) أنشئ R2 bucket باسم aytroun-images، ثم تأكد أن Worker لديه binding باسم IMAGES يشير إلى aytroun-images.
-6) انشر Worker بعد إضافة الأسرار والـ R2 binding.
+لتحديث الملفات:
+1) ارفع محتويات هذا المجلد إلى مستودع GitHub على الفرع main واستبدل الملفات القديمة.
+2) في Cloudflare افتح Workers & Pages > aytroun-api > Edit code.
+3) استبدل محتوى worker.js بمحتوى Cloudflare/worker.js الموجود في هذا ZIP ثم اضغط Deploy.
+4) لا تنشئ R2 ولا تضف IMAGES binding.
+5) لا تحذف D1 binding DB ولا Secrets الموجودة.
+6) افتح رابط GitHub Pages ثم أضف /admin.html لتسجيل الدخول.
 
-تنبيه: لا تضع كلمات السر داخل GitHub أو ملفات JavaScript.
+الميزات:
+- إضافة وتعديل وحذف المنتجات.
+- أسعار التجزئة PC وPAC وBOX وعدد الحبات في الباك والصندوق.
+- صور المنتجات واللوغو محفوظة ضمن D1 بعد ضغطها.
+- تعديل اسم المحل ورقم واتساب واللغة والعنوان.
+- تحديد رسوم التوصيل لكل منطقة.
+- مشاهدة الطلبات وتغيير حالتها.
+- Backup/Restore لبيانات المنتجات والإعدادات والمناطق والصور.
 
-النشر من GitHub:
-- GitHub Pages ينشر ملفات المتجر من جذر المستودع.
-- Worker يمكن ربطه بمستودع GitHub من Workers & Pages > aytroun-api > Settings/Builds أو Connect to Git، مع Root directory = cloudflare وDeploy command = npx wrangler deploy.
-- قد يطلب Cloudflare إعداد API token/permissions للربط.
-
-الموجود حالياً:
-- صفحة المتجر index.html
-- صفحة الإدارة admin.html
-- API worker.js
-- مخطط قاعدة البيانات schema.sql
-- ملف إعدادات المتجر config.js
-
-الميزات التي تتطلب إعداداً إضافياً ولم تُفعّل تلقائياً:
-- WhatsApp Business API لاستقبال زر/تأكيد التسليم تلقائياً؛ رابط wa.me الحالي يفتح رسالة جاهزة فقط.
-- مستورد SFF الحقيقي: يلزم تزويد نسخة Backup/Export من SFF وفحص بنيتها. لا توجد بيانات منتجات SFF في هذه الحزمة.
-- النسخ الاحتياطي الحالي لبيانات المنتجات والإعدادات والمناطق لا يضم ملفات الصور الثنائية المخزنة في R2.
+تنبيهات:
+- لا تضع كلمات السر داخل GitHub أو ملفات JavaScript.
+- لا يوجد اتصال بقاعدة SFF الحية ولا تعديل عليها.
+- مستورد SFF الحقيقي يحتاج نسخة Backup/Export فعلية لفحص بنيتها.
+- إرسال الطلب عبر WhatsApp يفتح رسالة جاهزة والزبون يضغط Send.
+- رسائل واتساب التلقائية وتأكيد التسليم الآلي تتطلب WhatsApp Business API.
+- النسخة الاحتياطية الحالية لا تشمل سجل الطلبات.
