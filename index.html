@@ -32,7 +32,7 @@
 <div class="section-head"><h2>عروض مميزة</h2><span>🏷️</span></div>
 <p class="muted" id="countText">جارٍ تحميل المنتجات...</p><section id="products" class="grid"></section></main><footer>Aytroun Grand SuperMarket · أهلاً وسهلاً بكم</footer>
 <nav class="bottom-nav"><button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="nav-icon">⌂</span>الرئيسية</button><button onclick="document.getElementById('categoryStrip').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">▦</span>التصنيفات</button><button onclick="document.getElementById('search').focus()"><span class="nav-icon">⌕</span>بحث</button><button onclick="document.getElementById('cartBtn').click()"><span class="nav-icon">🛒</span>السلة</button><button onclick="document.getElementById('checkout').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">♙</span>حسابي</button></nav>
-<div id="overlay" class="overlay"><aside class="drawer"><div class="head"><h2>طلبك</h2><button id="close" class="close">×</button></div><div id="items"></div><div class="total"><span>المجموع</span><span id="subtotal">$0.00</span></div><div class="total"><span>التوصيل</span><span id="deliveryFee">—</span></div><div class="total"><span>الإجمالي</span><span id="grandTotal">—</span></div><p class="note">Delivery fee is calculated from the selected area. Stock quantities are never displayed.</p><h3>معلومات الزبون</h3>
+<div id="overlay" class="overlay"><aside class="drawer"><div class="head"><h2>طلبك</h2><div style="display:flex;align-items:center;gap:8px"><button id="backToShop" class="btn light" type="button">→ متابعة التسوق</button><button id="close" class="close" type="button" aria-label="إغلاق السلة">×</button></div></div><div id="items"></div><div class="total"><span>المجموع</span><span id="subtotal">$0.00</span></div><div class="total"><span>التوصيل</span><span id="deliveryFee">—</span></div><div class="total"><span>الإجمالي</span><span id="grandTotal">—</span></div><p class="note">Delivery fee is calculated from the selected area. Stock quantities are never displayed.</p><h3>معلومات الزبون</h3>
 <form id="checkout"><div class="formgrid">
 <div class="field"><label>اسم الزبون *</label><input id="custName" required></div><div class="field"><label>الهاتف / واتساب *</label><input id="phone" type="tel" required></div>
 <div class="field full"><label>طريقة الاستلام *</label><div class="delivery"><label><input type="radio" name="method" value="Delivery" checked> توصيل</label><label><input type="radio" name="method" value="Pickup"> استلام من المتجر</label></div></div>
@@ -85,13 +85,54 @@ async function loadProductImage(img){
 }
 
 const productsEl=document.getElementById("products"),search=document.getElementById("search"),category=document.getElementById("category"),sort=document.getElementById("sort"),countText=document.getElementById("countText");
-function add(id){let p=products.find(x=>String(x.id)===String(id)),u=document.getElementById("u-"+id)?.value||"pc";if(!p||Number(p.available??1)!==1)return toast("هذا المنتج غير متوفر");if(price(p,u)==null)return toast("السعر غير متوفر");let k=id+"_"+u,x=cart.find(i=>i.key===k);x?x.qty+=(p.unit_type==='KG'&&p.weight_mode==='employee'?1:(u==="pc"&&p.unit_type!=="KG"?1:0.5)):cart.push({key:k,id:String(id),unit:u,qty:(p.unit_type==='KG'?(p.weight_mode==='employee'?1:0.5):1)});drawCart();toast("تمت الإضافة إلى السلة")}
-function drawCart(){count.textContent=cart.reduce((s,x)=>s+x.qty,0);items.innerHTML=cart.length?cart.map(x=>{let p=products.find(y=>String(y.id)===x.id),v=Number(price(p,x.unit)||0);return `<div class="item"><div><b>${esc(p.name)}</b><div class="muted">${x.unit.toUpperCase()} · ${money(v,p.currency||"USD")}</div><small>${p.unit_type==='KG'&&p.weight_mode==='employee'?'Final price after weighing':`Line: ${money(v*x.qty,p.currency||"USD")}`}</small></div><div class="qty"><button onclick="qty('${x.key}',-1)">−</button><input aria-label="Quantity" type="number" min="${p.unit_type==='KG'&&p.weight_mode!=='employee'?'0.5':'1'}" step="${p.unit_type==='KG'&&p.weight_mode!=='employee'?'0.5':'1'}" value="${x.qty}" style="width:68px;text-align:center;border:1px solid #d8e1d8;border-radius:7px;padding:5px" onchange="setQty('${x.key}',this.value)"><button onclick="qty('${x.key}',1)">+</button></div></div>`}).join(""):'<div class="empty">Your cart is empty.</div>';let totalUSD=cart.reduce((s,x)=>{let p=products.find(y=>String(y.id)===x.id);if(p.unit_type==='KG'&&p.weight_mode==='employee')return s;let v=Number(price(p,x.unit)||0),usd=p.currency==='LBP'?v/fxRate():v;return s+usd*x.qty},0);subtotal.innerHTML=dualMoney(totalUSD,'USD');updateDelivery()}
-function selectedArea(){return deliveryAreas.find(a=>String(a.id)===String(deliveryArea.value))}function updateDelivery(){let method=document.querySelector('[name="method"]:checked').value,a=selectedArea();let feeUSD=a?(a.currency==='LBP'?Number(a.fee)/fxRate():Number(a.fee)):0;deliveryFee.innerHTML=method==='Pickup'?dualMoney(0,'USD'):a?dualMoney(feeUSD,'USD'):'اختر المنطقة';let subUSD=cart.reduce((s,x)=>{let p=products.find(y=>String(y.id)===x.id);if(p.unit_type==='KG'&&p.weight_mode==='employee')return s;let v=Number(price(p,x.unit)||0);return s+(p.currency==='LBP'?v/fxRate():v)*x.qty},0);grandTotal.innerHTML=method==='Pickup'?dualMoney(subUSD,'USD'):a?dualMoney(subUSD+feeUSD,'USD'):'—'}
+function isFractionalProduct(p){
+ const unit=String(p?.unit_type||'').trim().toUpperCase();
+ const mode=String(p?.weight_mode||'customer').trim().toLowerCase();
+ return unit==='KG' && mode!=='employee';
+}
+function parseQuantity(value){return Number(String(value??'').trim().replace(/\\s/g,'').replace(',','.'));}
+function add(id){
+ let p=products.find(x=>String(x.id)===String(id)),u=document.getElementById("u-"+id)?.value||"pc";
+ if(!p||Number(p.available??1)!==1)return toast("هذا المنتج غير متوفر");
+ if(price(p,u)==null)return toast("السعر غير متوفر");
+ let k=id+"_"+u,x=cart.find(i=>i.key===k),step=isFractionalProduct(p)?0.5:1;
+ if(x)x.qty=Number((x.qty+step).toFixed(2));
+ else cart.push({key:k,id:String(id),unit:u,qty:step});
+ drawCart();toast("تمت الإضافة إلى السلة");
+}
+function drawCart(){count.textContent=cart.reduce((s,x)=>s+x.qty,0);items.innerHTML=cart.length?cart.map(x=>{let p=products.find(y=>String(y.id)===x.id),v=Number(price(p,x.unit)||0);return `<div class="item"><div><b>${esc(p.name)}</b><div class="muted">${x.unit.toUpperCase()} · ${money(v,p.currency||"USD")}</div><small>${String(p.unit_type||'').trim().toUpperCase()==='KG'&&String(p.weight_mode||'customer').trim().toLowerCase()==='employee'?'Final price after weighing':`Line: ${money(v*x.qty,p.currency||"USD")}`}</small></div><div class="qty"><button onclick="qty('${x.key}',-1)">−</button><input aria-label="Quantity" type="text" inputmode="decimal" min="${isFractionalProduct(p)?'0.5':'1'}" step="${isFractionalProduct(p)?'0.5':'1'}" value="${x.qty}" style="width:68px;text-align:center;border:1px solid #d8e1d8;border-radius:7px;padding:5px" onchange="setQty('${x.key}',this.value)"><button onclick="qty('${x.key}',1)">+</button></div></div>`}).join(""):'<div class="empty">Your cart is empty.</div>';let totalUSD=cart.reduce((s,x)=>{let p=products.find(y=>String(y.id)===x.id);if(String(p.unit_type||'').trim().toUpperCase()==='KG'&&String(p.weight_mode||'customer').trim().toLowerCase()==='employee')return s;let v=Number(price(p,x.unit)||0),usd=p.currency==='LBP'?v/fxRate():v;return s+usd*x.qty},0);subtotal.innerHTML=dualMoney(totalUSD,'USD');updateDelivery()}
+function selectedArea(){return deliveryAreas.find(a=>String(a.id)===String(deliveryArea.value))}function updateDelivery(){let method=document.querySelector('[name="method"]:checked').value,a=selectedArea();let feeUSD=a?(a.currency==='LBP'?Number(a.fee)/fxRate():Number(a.fee)):0;deliveryFee.innerHTML=method==='Pickup'?dualMoney(0,'USD'):a?dualMoney(feeUSD,'USD'):'اختر المنطقة';let subUSD=cart.reduce((s,x)=>{let p=products.find(y=>String(y.id)===x.id);if(String(p.unit_type||'').trim().toUpperCase()==='KG'&&String(p.weight_mode||'customer').trim().toLowerCase()==='employee')return s;let v=Number(price(p,x.unit)||0);return s+(p.currency==='LBP'?v/fxRate():v)*x.qty},0);grandTotal.innerHTML=method==='Pickup'?dualMoney(subUSD,'USD'):a?dualMoney(subUSD+feeUSD,'USD'):'—'}
 deliveryArea.onchange=updateDelivery;
-function setQty(k,value){let x=cart.find(i=>i.key===k);if(!x)return;let p=products.find(y=>String(y.id)===x.id);let fractional=p?.unit_type==='KG'&&p?.weight_mode!=='employee';let min=fractional?0.5:1;let n=Number(value);if(!Number.isFinite(n)||n<min){cart=cart.filter(i=>i!==x);}else{x.qty=fractional?Math.round(n*2)/2:Math.max(1,Math.round(n));}drawCart();updateDelivery()}
-function qty(k,d){let x=cart.find(i=>i.key===k);if(!x)return;let p=products.find(y=>String(y.id)===x.id);let step=p?.unit_type==='KG'&&p?.weight_mode!=='employee'?0.5:1;setQty(k,x.qty+d*step)}
-cartBtn.onclick=()=>overlay.classList.add("open");close.onclick=()=>overlay.classList.remove("open");overlay.onclick=e=>{if(e.target===overlay)overlay.classList.remove("open")};
+function setQty(k,value){
+ const x=cart.find(i=>i.key===k);if(!x)return;
+ const p=products.find(y=>String(y.id)===x.id),fractional=isFractionalProduct(p),min=fractional?0.5:1;
+ const n=parseQuantity(value);
+ if(!Number.isFinite(n)||n<min){toast(fractional?'أدخل 0.5 كحد أدنى':'أدخل كمية صحيحة لا تقل عن 1');drawCart();return;}
+ x.qty=fractional?Math.max(0.5,Math.round(n*2)/2):Math.max(1,Math.round(n));
+ drawCart();
+}
+function qty(k,d){
+ const x=cart.find(i=>i.key===k);if(!x)return;
+ const p=products.find(y=>String(y.id)===x.id),step=isFractionalProduct(p)?0.5:1;
+ const next=Number((x.qty+d*step).toFixed(2));
+ if(next<step){cart=cart.filter(i=>i!==x);drawCart();return;}
+ x.qty=next;drawCart();
+}
+const cartOverlay=document.getElementById("overlay");
+const closeCartButton=document.getElementById("close");
+const backToShopButton=document.getElementById("backToShop");
+function hideCart(e){
+ if(e){e.preventDefault();e.stopPropagation();}
+ cartOverlay.classList.remove("open");
+ document.body.classList.remove("cart-open");
+}
+cartBtn.addEventListener("click",e=>{e.preventDefault();cartOverlay.classList.add("open");document.body.classList.add("cart-open");});
+closeCartButton.addEventListener("click",hideCart);
+backToShopButton.addEventListener("click",e=>{
+ hideCart(e);
+ document.getElementById("products")?.scrollIntoView({behavior:"smooth",block:"start"});
+});
+cartOverlay.addEventListener("click",e=>{if(e.target===cartOverlay)hideCart(e);});
 search.oninput=()=>{visibleLimit=60;draw()};category.onchange=()=>{visibleLimit=60;draw()};sort.onchange=()=>{visibleLimit=60;draw()};
 function syncPickupDeliveryFields(){
  const isDelivery=document.querySelector('[name="method"]:checked').value==="Delivery";
@@ -113,7 +154,7 @@ checkout.onsubmit=async e=>{
  if(!custName.value.trim()||!phone.value.trim())return toast("Enter customer name and phone number");
  if(method==="Delivery"&&(!addr||!area))return toast("Choose delivery area and enter address");
  let grouped={};
- cart.forEach(x=>{let p=products.find(y=>String(y.id)===x.id),c=p.currency||"USD";if(!(p.unit_type==='KG'&&p.weight_mode==='employee'))grouped[c]=(grouped[c]||0)+Number(price(p,x.unit)||0)*x.qty});
+ cart.forEach(x=>{let p=products.find(y=>String(y.id)===x.id),c=p.currency||"USD";if(!(String(p.unit_type||'').trim().toUpperCase()==='KG'&&String(p.weight_mode||'customer').trim().toLowerCase()==='employee'))grouped[c]=(grouped[c]||0)+Number(price(p,x.unit)||0)*x.qty});
  let fee=method==="Delivery"?Number(area?.fee||0):0;
  let orderItems=cart.map(x=>{let p=products.find(y=>String(y.id)===x.id);return {id:x.id,name:p.name,unit:x.unit,qty:x.qty,price:Number(price(p,x.unit)||0),currency:p.currency||"USD",unit_type:p.unit_type||"PC",weight_mode:p.weight_mode||"customer"}});
  let lines=[`*${storeSettings.store_name||CFG.STORE_NAME||"AYTROUN GRAND SUPERMARKET"} - NEW ORDER*`,"",`Customer: ${custName.value.trim()}`,`Phone: ${phone.value.trim()}`,`Method: ${method}`];
