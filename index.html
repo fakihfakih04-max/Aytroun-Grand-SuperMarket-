@@ -20,7 +20,7 @@
 @media(max-width:600px){body{background:#043719}.top{padding:5px 10px;min-height:44px;justify-content:flex-end}.logo-banner img{max-height:160px;width:96%}.announcement{margin:9px auto 8px;padding:10px 12px;font-size:17px}.wrap{padding:8px 9px 94px}.toolbar{margin:8px 0}.search{min-width:100%;padding:12px}.toolbar .select{flex:1}.category-chip{min-width:82px;padding:8px 10px}.promo-hero{height:118px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:9px;align-items:stretch}.card{min-width:0}.photo{height:132px}.body{min-width:0}.name{overflow-wrap:anywhere}.photo{height:125px;padding:6px}.body{padding:9px;gap:6px}.name{font-size:13px;min-height:38px}.foot{flex-direction:column}.foot .btn{padding:9px 7px;font-size:12px}.price b span:first-child{font-size:13px}.price small{font-size:11px}.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:linear-gradient(120deg,#032e17,#075326);border-top:1px solid #e2bd50;padding:7px 4px calc(7px + env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -5px 18px #001d0e44}.bottom-nav button{background:transparent;color:#fff;border:0;display:grid;gap:1px;justify-items:center;font-size:11px;font-weight:800;padding:4px 7px}.bottom-nav button .nav-icon{font-size:22px}.bottom-nav button.active{background:linear-gradient(135deg,#ffe58a,#e5b52f);color:#12361d;border-radius:14px;min-width:65px}.splash img{max-height:76vh;width:96vw}.splash-groceries{margin-top:12px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}}
 </style></head><body>
 <div id="splash" class="splash"><img src="assets/store-logo.png" alt="Aytroun Grand SuperMarket"><div class="spinner"></div></div>
-<header class="top"><div class="brand-title" aria-hidden="true"></div><div><button id="install" class="btn gold" hidden>تثبيت التطبيق</button> <button id="cartBtn" class="btn light">🛒 <span id="count">0</span></button></div></header>
+<header class="top"><div class="brand-title" aria-hidden="true"></div><div style="display:flex;align-items:center;gap:8px"><a id="adminBtnTop" href="./admin.html" class="btn gold" style="text-decoration:none;white-space:nowrap">⚙ الإدارة</a><button id="install" class="btn gold" hidden>تثبيت التطبيق</button> <button id="cartBtn" class="btn light">🛒 <span id="count">0</span></button></div></header>
 <section class="logo-banner" aria-label="Supermarket logo">
   <img src="assets/store-logo.png" alt="Aytroun Grand SuperMarket logo" fetchpriority="high">
 </section>
@@ -31,7 +31,7 @@
 <div class="promo-hero"><span>🛒 اختاروا الأفضل لعائلتكم</span></div>
 <div class="section-head"><h2>عروض مميزة</h2><span>🏷️</span></div>
 <p class="muted" id="countText">جارٍ تحميل المنتجات...</p><section id="products" class="grid"></section></main><footer>Aytroun Grand SuperMarket · أهلاً وسهلاً بكم</footer>
-<nav class="bottom-nav"><button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="nav-icon">⌂</span>الرئيسية</button><button onclick="document.getElementById('categoryStrip').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">▦</span>التصنيفات</button><button onclick="document.getElementById('search').focus()"><span class="nav-icon">⌕</span>بحث</button><button onclick="document.getElementById('cartBtn').click()"><span class="nav-icon">🛒</span>السلة</button><button id="accountBtn" type="button"><span class="nav-icon">♙</span>حسابي</button></nav>
+<nav class="bottom-nav"><button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="nav-icon">⌂</span>الرئيسية</button><button onclick="document.getElementById('categoryStrip').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">▦</span>التصنيفات</button><button onclick="document.getElementById('search').focus()"><span class="nav-icon">⌕</span>بحث</button><button onclick="document.getElementById('cartBtn').click()"><span class="nav-icon">🛒</span>السلة</button><button id="accountBtn" type="button"><span class="nav-icon">♙</span>حسابي</button><a id="adminBtnMobile" href="./admin.html" style="background:transparent;color:#fff;border:0;display:grid;gap:1px;justify-items:center;text-decoration:none;font-size:11px;font-weight:800;padding:4px 7px"><span class="nav-icon" style="font-size:22px">⚙</span>الإدارة</a></nav>
 <div id="overlay" class="overlay"><aside class="drawer"><div class="head"><h2>طلبك</h2><div style="display:flex;align-items:center;gap:8px"><button id="backToShop" class="btn light" type="button">→ متابعة التسوق</button><button id="close" class="close" type="button" aria-label="إغلاق السلة">×</button></div></div><div id="items"></div><div class="total"><span>المجموع</span><span id="subtotal">$0.00</span></div><div class="total"><span>التوصيل</span><span id="deliveryFee">—</span></div><div class="total"><span>الإجمالي</span><span id="grandTotal">—</span></div><p class="note">Delivery fee is calculated from the selected area. Stock quantities are never displayed.</p><h3>معلومات الزبون</h3>
 <form id="checkout"><div class="formgrid">
 <div class="field"><label>اسم الزبون *</label><input id="custName" required></div><div class="field"><label>الهاتف / واتساب *</label><input id="phone" type="tel" required></div>
@@ -124,25 +124,34 @@ function qty(k,d){
  x.qty=next;drawCart();
 }
 const cartOverlay=document.getElementById("overlay");
+const cartDrawer=cartOverlay.querySelector(".drawer");
+const cartButton=document.getElementById("cartBtn");
 const closeCartButton=document.getElementById("close");
 const backToShopButton=document.getElementById("backToShop");
+const accountButton=document.getElementById("accountBtn");
+function showCart(){
+ cartOverlay.classList.add("open");
+ document.body.classList.add("cart-open");
+}
 function hideCart(e){
  if(e){e.preventDefault();e.stopPropagation();}
  cartOverlay.classList.remove("open");
  document.body.classList.remove("cart-open");
 }
-cartBtn.addEventListener("click",e=>{e.preventDefault();cartOverlay.classList.add("open");document.body.classList.add("cart-open");});
-// Account button: open the cart drawer first, then move to the customer details form.
-document.getElementById("accountBtn")?.addEventListener("click",e=>{
+cartButton.addEventListener("click",e=>{e.preventDefault();showCart();});
+// Account opens the cart and moves the drawer itself to customer details.
+accountButton?.addEventListener("click",e=>{
  e.preventDefault();
- cartOverlay.classList.add("open");
- document.body.classList.add("cart-open");
+ showCart();
  requestAnimationFrame(()=>{
   const form=document.getElementById("checkout");
-  if(form) form.scrollIntoView({behavior:"smooth",block:"start"});
+  if(form && cartDrawer){
+   const drawerTop=cartDrawer.getBoundingClientRect().top;
+   const formTop=form.getBoundingClientRect().top;
+   cartDrawer.scrollTo({top:cartDrawer.scrollTop+(formTop-drawerTop)-12,behavior:"smooth"});
+  }
  });
 });
-
 closeCartButton.addEventListener("click",hideCart);
 backToShopButton.addEventListener("click",e=>{
  hideCart(e);
