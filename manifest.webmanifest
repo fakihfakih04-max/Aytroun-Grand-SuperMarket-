@@ -1,9 +1,26 @@
 {
-  "name": "SFF Customer Store",
-  "short_name": "SFF Store",
+  "id": "./index.html",
+  "name": "Aytroun Grand SuperMarket",
+  "short_name": "Aytroun Market",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f6f8f6",
   "theme_color": "#10251f",
-  "description": "SFF Customer Store"
+  "description": "Aytroun Grand SuperMarket online store",
+  "icons": [
+    {
+      "src": "./assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }

@@ -1,0 +1,14 @@
+Aytroun Grand SuperMarket – تثبيت التطبيق والمزامنة
+
+1) ارفع محتويات هذا المجلد إلى نفس GitHub Pages repository واستبدل الملفات القديمة.
+2) تأكد أن الملفات التالية موجودة في جذر الموقع:
+   index.html, config.js, manifest.webmanifest, sw.js
+   ومجلد assets وفيه app-icon-192.png و app-icon-512.png و store-logo.png
+3) لا تغيّر Cloudflare Worker أو D1 أو أي SQL لهذا التحديث.
+4) الهاتف واللابتوب يقرآن المنتجات والأسعار والإعدادات والطلبات من نفس Cloudflare D1 عبر Worker الموجود في config.js.
+5) يجب أن يكون الجهازان متصلين بالإنترنت. التعديلات تُحفظ في قاعدة البيانات المشتركة؛ افتح/حدّث الصفحة على الجهاز الآخر لجلب أحدث البيانات.
+6) Android/Chrome: افتح رابط المتجر ثم قائمة Chrome > Install app أو Add to Home screen.
+7) iPhone/Safari: Share > Add to Home Screen.
+8) Windows/Chrome أو Edge: افتح الموقع واضغط Install App إن ظهر، أو أيقونة التثبيت بجانب شريط العنوان.
+
+ملاحظة: Service Worker لا يخزّن ردود API أو المنتجات في Cache حتى لا يعرض بيانات قديمة. التصفح الأساسي قد يفتح من النسخة المخزنة عند انقطاع الإنترنت، لكن الطلبات وتحديثات المنتجات تحتاج اتصالاً بالإنترنت.
