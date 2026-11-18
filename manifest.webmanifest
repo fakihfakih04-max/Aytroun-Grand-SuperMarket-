@@ -1,14 +1,14 @@
 {
   "id": "./index.html",
   "name": "Aytroun Grand SuperMarket",
-  "short_name": "Aytroun Market",
+  "short_name": "SuperMarket",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f6f8f6",
-  "theme_color": "#10251f",
-  "description": "Aytroun Grand SuperMarket online store",
+  "background_color": "#032d18",
+  "theme_color": "#063d20",
+  "description": "تطبيق تعاونية عيترون الكبرى",
   "icons": [
     {
       "src": "./assets/app-icon-192.png",
