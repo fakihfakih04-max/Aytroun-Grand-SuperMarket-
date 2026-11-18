@@ -22,14 +22,12 @@ export default {
    if(p.startsWith('/api/products/')&&p.endsWith('/image')&&req.method==='GET'){
     const id=decodeURIComponent(p.slice('/api/products/'.length,-'/image'.length));
     const r=await env.DB.prepare('SELECT image FROM products WHERE id=?').bind(id).first();
-    return new Response(JSON.stringify({image:r?.image||''}),{
-     status:200,
-     headers:{
-      'content-type':'application/json; charset=utf-8',
-      'access-control-allow-origin':'*',
-      'cache-control':'public, max-age=3600, stale-while-revalidate=86400'
-     }
-    });
+    const image=r?.image||'';
+    if(u.searchParams.get('raw')==='1') return json({image});
+    const match=image.match(/^data:(image\\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if(!match) return new Response('',{status:404,headers:{'access-control-allow-origin':'*'}});
+    const bytes=Uint8Array.from(atob(match[2]),c=>c.charCodeAt(0));
+    return new Response(bytes,{status:200,headers:{'content-type':match[1],'access-control-allow-origin':'*','cache-control':'public, max-age=86400'}});
    }
 
    if(p==='/api/products'&&req.method==='GET'){
@@ -43,7 +41,7 @@ export default {
 
    if(p==='/api/admin/products'&&req.method==='GET'){
     if(!await authorized(req,env))return json({error:'Unauthorized'},401);
-    return json({products:await rows(env.DB,'SELECT * FROM products ORDER BY name')});
+    return json({products:await rows(env.DB,'SELECT id,name,category,code,barcode,currency,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products ORDER BY name')});
    }
 
    if(p==='/api/settings'&&req.method==='GET'){
@@ -125,6 +123,12 @@ export default {
 
    if(p==='/api/orders'&&req.method==='GET')
     return json({orders:await rows(env.DB,'SELECT * FROM orders ORDER BY created_at DESC LIMIT 300')});
+
+   if(p.startsWith('/api/orders/')&&req.method==='DELETE'){
+    const id=decodeURIComponent(p.split('/')[3]||'');
+    await env.DB.prepare('DELETE FROM orders WHERE id=?').bind(id).run();
+    return json({ok:true,deleted:id});
+   }
 
    if(p.startsWith('/api/orders/')&&req.method==='PUT'){
     const id=decodeURIComponent(p.split('/')[3]||'');
