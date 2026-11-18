@@ -41,3 +41,10 @@ This project is separate from SFF ERP. It does not connect to, read from, or mod
 - Automatic WhatsApp messages and automatic delivery-receipt replies require WhatsApp Business Platform/API setup. The current admin can manage order statuses manually.
 - The JSON backup does not include order history.
 - Import from a real SFF backup requires inspecting a sanitized backup/export first.
+
+
+## Manual product test (before SFF import)
+
+Follow `START-HERE-AR.txt`. This release adds description, stock quantity, and availability to manual product entry. Exact stock quantity is admin-only; the public catalog shows only Available / Not Available. Public product reads omit the exact quantity.
+
+For an existing D1 database, run `Cloudflare/migrate-existing-d1.sql` exactly once before deploying the updated Worker. Keep the existing `DB`, `ADMIN_PASSWORD`, and `JWT_SECRET` bindings/secrets. R2 is not required; compressed image data is stored in D1.

@@ -1,34 +1,42 @@
-مشروع تعاونية عيترون الكبرى
+AYTROUN GRAND SUPERMARKET - SETUP
 
-النسخة الحالية لا تحتاج R2 ولا بطاقة دفع لتخزين الصور:
-- صور المنتجات واللوغو يتم ضغطها داخل المتصفح ثم حفظها في D1.
-- اختر صوراً معقولة الحجم؛ لوحة الإدارة ترفض الصورة إذا تجاوزت 500KB بعد الضغط.
-- قاعدة البيانات: aytroun-db
-- Worker: aytroun-api
-- D1 binding: DB
-- أسرار Worker: ADMIN_PASSWORD و JWT_SECRET
+الهدف الحالي: تشغيل لوحة Admin وتجربة إضافة منتج يدوي قبل استيراد SFF.
 
-لتحديث الملفات:
-1) ارفع محتويات هذا المجلد إلى مستودع GitHub على الفرع main واستبدل الملفات القديمة.
-2) في Cloudflare افتح Workers & Pages > aytroun-api > Edit code.
-3) استبدل محتوى worker.js بمحتوى Cloudflare/worker.js الموجود في هذا ZIP ثم اضغط Deploy.
-4) لا تنشئ R2 ولا تضف IMAGES binding.
-5) لا تحذف D1 binding DB ولا Secrets الموجودة.
-6) افتح رابط GitHub Pages ثم أضف /admin.html لتسجيل الدخول.
+1) حدّث قاعدة D1 الموجودة مرة واحدة فقط:
+   افتح Cloudflare > D1 > aytroun-db > Console
+   انسخ محتوى Cloudflare/migrate-existing-d1.sql ونفّذه.
+   لا تعِد تشغيله إذا ظهرت رسالة أن الأعمدة موجودة مسبقاً.
 
-الميزات:
-- إضافة وتعديل وحذف المنتجات.
-- أسعار التجزئة PC وPAC وBOX وعدد الحبات في الباك والصندوق.
-- صور المنتجات واللوغو محفوظة ضمن D1 بعد ضغطها.
-- تعديل اسم المحل ورقم واتساب واللغة والعنوان.
-- تحديد رسوم التوصيل لكل منطقة.
-- مشاهدة الطلبات وتغيير حالتها.
-- Backup/Restore لبيانات المنتجات والإعدادات والمناطق والصور.
+2) حدّث Worker:
+   Cloudflare > Workers & Pages > aytroun-api > Edit code
+   استبدل worker.js بمحتوى Cloudflare/worker.js ثم Deploy.
+   لا تحذف Bindings أو Secrets: DB, ADMIN_PASSWORD, JWT_SECRET.
+   لا حاجة إلى R2.
 
-تنبيهات:
-- لا تضع كلمات السر داخل GitHub أو ملفات JavaScript.
-- لا يوجد اتصال بقاعدة SFF الحية ولا تعديل عليها.
-- مستورد SFF الحقيقي يحتاج نسخة Backup/Export فعلية لفحص بنيتها.
-- إرسال الطلب عبر WhatsApp يفتح رسالة جاهزة والزبون يضغط Send.
-- رسائل واتساب التلقائية وتأكيد التسليم الآلي تتطلب WhatsApp Business API.
-- النسخة الاحتياطية الحالية لا تشمل سجل الطلبات.
+3) حدّث GitHub Pages:
+   ارفع واستبدل الملفات من جذر المشروع بهذه النسخة، ثم Commit changes.
+   تأكد أن index.html وadmin.html وconfig.js في جذر المستودع.
+
+4) افتح لوحة الإدارة:
+   https://fakihfakih04-max.github.io/Aytroun-Grand-SuperMarket-/admin.html
+   سجّل الدخول بكلمة ADMIN_PASSWORD التي خزنتها كـ Secret في Cloudflare.
+
+5) اختبر منتجاً يدوياً:
+   - Product ID: TEST-001
+   - Name: Test Product
+   - Category: Beverages
+   - Retail PC/PAC/BOX: أدخل أسعاراً تجريبية فقط
+   - Pieces per PAC/BOX: أدخل أرقاماً تجريبية
+   - Stock quantity: 5
+   - Availability: Available
+   - Description: Manual test item
+   - اختر صورة صغيرة ثم Save Product.
+   - افتح واجهة المتجر الرئيسية وتأكد من ظهور المنتج والصورة والوصف والأسعار وحالة Available.
+   - جرّب تعديل المنتج ثم حذفه بعد الاختبار.
+
+ملاحظات مهمة:
+- الكمية الفعلية ظاهرة في Admin فقط؛ لا تظهر للزبائن.
+- لا توجد أسعار تكلفة أو جملة في كتالوج الزبون.
+- صور المنتجات واللوغو مضغوطة ومخزنة داخل D1، لذلك لا تحتاج R2 أو بطاقة.
+- لا تربط هذا المشروع بقاعدة SFF مباشرة؛ الاستيراد سيكون من Backup/Export فقط.
+- لا تشغّل SQL migration أكثر من مرة.
