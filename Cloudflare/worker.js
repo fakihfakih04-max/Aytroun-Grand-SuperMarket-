@@ -81,6 +81,16 @@ export default {
     return json({products});
    }
 
+   // Fast exact barcode lookup across the complete products table (admin only)
+   if(p==='/api/admin/product-by-barcode'&&req.method==='GET'){
+    if(!await authorized(req,env))return json({error:'Unauthorized'},401);
+    const code=(u.searchParams.get('code')||'').trim();
+    if(!code)return json({error:'Barcode is required'},400);
+    const product=await env.DB.prepare(`SELECT id,name,category,code,barcode,barcode_pac,barcode_box,currency,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products WHERE barcode=? OR barcode_pac=? OR barcode_box=? OR code=? OR id=? LIMIT 1`)
+      .bind(code,code,code,code,code).first();
+    return product?json({product}):json({error:'Product not found'},404);
+   }
+
    // Admin products
    if(p==='/api/admin/products'&&req.method==='GET'){
     if(!await authorized(req,env))return json({error:'Unauthorized'},401);
