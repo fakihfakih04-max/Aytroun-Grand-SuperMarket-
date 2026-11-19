@@ -1,7 +1,7 @@
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':'*','access-control-allow-headers':'content-type,authorization,x-hub-signature-256','access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS'}});
 const enc=s=>new TextEncoder().encode(s);
-const isVegFruitCategory=value=>/(vegetable|vegetables|fruit|fruits|خضار|خضروات|فاكهة|فواكه)/i.test(String(value||''));
+const isVegFruitCategory=value=>/(vegetable|vegetables|vegtable|vegtables|fruit|fruits|خضار|خضروات|فاكهة|فواكه)/i.test(String(value||''));
 
 async function sign(payload,secret){
  const key=await crypto.subtle.importKey('raw',enc(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
