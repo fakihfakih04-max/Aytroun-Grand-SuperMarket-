@@ -20,6 +20,8 @@
 .bottom-nav{display:none}.toast{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#10251f;color:white;padding:12px 17px;border-radius:10px;z-index:40}
 .splash{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 35%,#0c6a2c,#03401d 62%,#012512);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;transition:opacity .35s,visibility .35s}.splash.hide{opacity:0;visibility:hidden;pointer-events:none}.splash img{width:min(96vw,760px);max-height:76vh;object-fit:contain;filter:drop-shadow(0 8px 18px #0007)}.splash-groceries{font-size:clamp(45px,10vw,85px);margin-top:20px}.splash-name{color:#ffe28a;font-size:clamp(20px,5vw,32px);font-weight:1000;text-align:center;margin-top:15px}.spinner{width:35px;height:35px;border:4px solid #ffffff55;border-top-color:#ffe28a;border-radius:50%;animation:spin .8s linear infinite;margin-top:25px}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:600px){body{background:#043719}.top{padding:5px 10px;min-height:44px;justify-content:flex-end}.logo-banner img{max-height:160px;width:96%}.announcement{margin:9px auto 8px;padding:10px 12px;font-size:17px}.wrap{padding:8px 9px 94px}.toolbar{margin:8px 0}.search{min-width:100%;padding:12px}.toolbar .select{flex:1}.category-chip{min-width:82px;padding:8px 10px}.promo-hero{height:118px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:9px;align-items:stretch}.card{min-width:0}.photo{height:132px}.body{min-width:0}.name{overflow-wrap:anywhere}.photo{height:125px;padding:6px}.body{padding:9px;gap:6px}.name{font-size:13px;min-height:38px}.foot{flex-direction:column}.foot .btn{padding:9px 7px;font-size:12px}.price b span:first-child{font-size:13px}.price small{font-size:11px}.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:linear-gradient(120deg,#032e17,#075326);border-top:1px solid #e2bd50;padding:7px 4px calc(7px + env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -5px 18px #001d0e44}.bottom-nav button{background:transparent;color:#fff;border:0;display:grid;gap:1px;justify-items:center;font-size:11px;font-weight:800;padding:4px 7px}.bottom-nav button .nav-icon{font-size:22px}.bottom-nav button.active{background:linear-gradient(135deg,#ffe58a,#e5b52f);color:#12361d;border-radius:14px;min-width:65px}.splash img{max-height:76vh;width:96vw}.splash-groceries{margin-top:12px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+
+.scan-result{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #dfe8df;border-radius:13px;background:#fff;margin:8px 0}.scan-result img{width:68px;height:68px;object-fit:contain;border-radius:9px;background:#f4f7f4}.scan-result .grow{flex:1;min-width:0}.scan-result button{white-space:nowrap}
 </style></head><body>
 <div id="splash" class="splash"><img src="assets/store-logo.png" alt="Aytroun Grand SuperMarket"><div class="spinner"></div></div>
 <header class="top"><div class="brand-title" aria-hidden="true"></div><div style="display:flex;align-items:center;gap:8px"><a id="adminBtnTop" href="./admin.html" class="btn gold" style="text-decoration:none;white-space:nowrap">⚙ الإدارة</a><button id="install" class="btn gold" hidden>تثبيت التطبيق</button> <button id="cartBtn" class="btn light">🛒 <span id="count">0</span></button></div></header>
@@ -28,7 +30,7 @@
 </section>
 <div class="announcement" aria-label="إعلان"><span>📣 محمد ابو نصري حدك ما حدا قدك !!!</span></div>
 <main class="wrap">
-<div class="toolbar"><input id="search" class="search" placeholder="ابحث عن منتج أو تصنيف..."><select id="category" class="select"><option value="">كل التصنيفات</option></select><select id="sort" class="select"><option value="name">الاسم</option><option value="price">السعر: الأقل أولاً</option></select></div>
+<div class="toolbar"><input id="search" class="search" placeholder="ابحث عن منتج أو تصنيف..."><button id="openBarcode" class="btn gold" type="button">▦ مسح باركود</button><button id="openPhoto" class="btn light" type="button">📷 تصوير منتج</button><select id="category" class="select"><option value="">كل التصنيفات</option></select><select id="sort" class="select"><option value="name">الاسم</option><option value="price">السعر: الأقل أولاً</option></select></div>
 <nav id="categoryStrip" class="category-strip" aria-label="التصنيفات"></nav>
 <div class="promo-hero"><span>🛒 اختاروا الأفضل لعائلتكم</span></div>
 <div class="section-head"><h2>عروض مميزة</h2><span>🏷️</span></div>
@@ -39,7 +41,21 @@
 <div class="field"><label>اسم الزبون *</label><input id="custName" required></div><div class="field"><label>الهاتف / واتساب *</label><input id="phone" type="tel" required></div>
 <div class="field full"><label>طريقة الاستلام *</label><div class="delivery"><label><input type="radio" name="method" value="Delivery" checked> توصيل</label><label><input type="radio" name="method" value="Pickup"> استلام من المتجر</label></div></div>
 <div class="field full" id="addressWrap"><label>منطقة التوصيل *</label><select id="deliveryArea" required><option value="">اختر المنطقة</option></select><label>عنوان التوصيل الكامل *</label><textarea id="address"></textarea></div><div class="field full"><label>ملاحظات</label><textarea id="notes"></textarea></div>
-</div><button class="btn primary" style="width:100%;margin-top:15px" type="submit">إرسال الطلب عبر واتساب</button><p class="note">WhatsApp opens with the order ready. Customer must press Send in WhatsApp.</p></form></aside></div><div id="toast" class="toast"></div>
+</div><button class="btn primary" style="width:100%;margin-top:15px" type="submit">إرسال الطلب عبر واتساب</button><p class="note">WhatsApp opens with the order ready. Customer must press Send in WhatsApp.</p></form></aside></div><div id="scanModal" class="overlay" style="z-index:60"><aside class="drawer" style="max-width:560px">
+<div class="head"><h2 id="scanTitle">مسح المنتج</h2><button id="scanClose" class="close" type="button">×</button></div>
+<p id="scanHelp" class="note">وجّه كاميرا الهاتف نحو الباركود أو التقط صورة للمنتج.</p>
+<div style="background:#071a13;border-radius:16px;overflow:hidden;min-height:220px;display:grid;place-items:center">
+<video id="scanVideo" playsinline autoplay muted style="width:100%;max-height:55vh;object-fit:contain;display:none"></video>
+<canvas id="photoCanvas" style="display:none"></canvas>
+<div id="scanPlaceholder" style="color:white;padding:30px;text-align:center">📷 الكاميرا ستظهر هنا</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<button id="startScan" class="btn primary" type="button">تشغيل الكاميرا</button>
+<button id="takePhoto" class="btn gold" type="button" hidden>التقاط صورة ومطابقة</button>
+<label class="btn light" style="display:inline-flex;align-items:center">اختيار صورة<input id="photoFile" type="file" accept="image/*" capture="environment" hidden></label>
+</div>
+<div id="scanManual" style="display:none;margin-top:12px"><label class="field">أدخل الباركود يدوياً<input id="barcodeInput" inputmode="numeric" placeholder="Barcode"></label><button id="findBarcode" class="btn primary" type="button" style="margin-top:8px">بحث عن الباركود</button></div>
+<div id="scanResults" style="margin-top:14px"></div>
+</aside></div><div id="toast" class="toast"></div>
 <script src="config.js"></script><script>
 const CFG=window.SFF_CONFIG||{};let products=[],cart=[],installPrompt=null,storeSettings={},deliveryAreas=[];
 const money=(v,c="USD")=>new Intl.NumberFormat("en-US",{style:"currency",currency:c,maximumFractionDigits:2}).format(Number(v||0));
@@ -208,4 +224,28 @@ checkout.onsubmit=async e=>{
 };
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;install.hidden=false;install.onclick=async()=>{installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;install.hidden=true}});
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));setTimeout(()=>document.getElementById("splash")?.classList.add("hide"),2200);load().catch(()=>document.getElementById("splash")?.classList.add("hide"));
+
+// Aytroun mobile barcode + photo lookup
+(()=>{
+ const modal=document.getElementById('scanModal'),video=document.getElementById('scanVideo'),placeholder=document.getElementById('scanPlaceholder');
+ const results=document.getElementById('scanResults'),manual=document.getElementById('scanManual'),photoFile=document.getElementById('photoFile');
+ let stream=null,detector=null,scanLoop=false,mode='barcode';
+ const stop=()=>{scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null;video.style.display='none';placeholder.style.display='block';};
+ const open=(m)=>{mode=m;modal.classList.add('open');results.innerHTML='';manual.style.display=m==='barcode'?'block':'none';document.getElementById('scanTitle').textContent=m==='barcode'?'مسح الباركود':'التعرّف على صورة المنتج';document.getElementById('scanHelp').textContent=m==='barcode'?'وجّه الكاميرا نحو باركود المنتج.':'صوّر المنتج بوضوح، وسنقارن الصورة بصور المنتجات المسجلة بالمتجر.';document.getElementById('takePhoto').hidden=m!=='photo';document.getElementById('startScan').textContent=m==='barcode'?'تشغيل ماسح الباركود':'فتح الكاميرا';};
+ const close=()=>{stop();modal.classList.remove('open')};
+ document.getElementById('openBarcode').onclick=()=>open('barcode');
+ document.getElementById('openPhoto').onclick=()=>open('photo');
+ document.getElementById('scanClose').onclick=close;
+ modal.addEventListener('click',e=>{if(e.target===modal)close()});
+ function showMatches(list,label){results.innerHTML='<b>'+label+'</b>'+list.map(p=>{let img=p.has_image?`${CFG.API_URL}/api/products/${encodeURIComponent(p.id)}/image`:(p.image||'');return `<div class="scan-result">${img?`<img src="${esc(img)}" loading="lazy">`:'<div style="width:68px;text-align:center">🛒</div>'}<div class="grow"><b>${esc(p.name)}</b><div class="note">${esc(p.barcode||p.code||'')}</div><div><b>${dualMoney(price(p,'pc'),p.currency||'USD')}</b></div></div><button class="btn primary" type="button" data-addscan="${esc(p.id)}">عرض المنتج</button></div>`}).join('')||'<div class="empty">لم نعثر على منتج مطابق.</div>';results.querySelectorAll('[data-addscan]').forEach(b=>b.onclick=()=>{let p=products.find(x=>String(x.id)===b.dataset.addscan);if(!p)return;close();let el=document.getElementById('search');el.value=p.name;draw();window.scrollTo({top:document.querySelector('.section-head').offsetTop-70,behavior:'smooth'});});}
+ function findCode(code){let c=String(code||'').replace(/\s/g,'').toLowerCase();let found=products.filter(p=>[p.barcode,p.code].some(v=>String(v||'').replace(/\s/g,'').toLowerCase()===c));showMatches(found,'نتيجة قراءة الباركود');if(found.length===1){let p=found[0];results.insertAdjacentHTML('afterbegin','<p class="note">تم العثور على المنتج. اضغط «عرض المنتج» للانتقال إليه.</p>')}}
+ document.getElementById('findBarcode').onclick=()=>findCode(document.getElementById('barcodeInput').value);
+ async function startCamera(){try{stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});video.srcObject=stream;video.style.display='block';placeholder.style.display='none';await video.play();if(mode==='barcode'){if(!('BarcodeDetector'in window)){manual.style.display='block';toast('المتصفح لا يدعم قراءة الباركود بالكاميرا؛ أدخل الرقم يدوياً أو استخدم Chrome حديثاً.');return}detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']});scanLoop=true;const tick=async()=>{if(!scanLoop)return;try{const codes=await detector.detect(video);if(codes.length){document.getElementById('barcodeInput').value=codes[0].rawValue;findCode(codes[0].rawValue);stop();return}}catch(e){}requestAnimationFrame(tick)};tick()}}catch(e){toast('تعذّر فتح الكاميرا. اسمح للمتصفح باستخدام الكاميرا وتأكد من HTTPS.');console.warn(e)}}
+ document.getElementById('startScan').onclick=startCamera;
+ function histogram(img){const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});c.width=24;c.height=24;ctx.drawImage(img,0,0,24,24);const d=ctx.getImageData(0,0,24,24).data,h=new Array(24).fill(0);for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];if(r>245&&g>245&&b>245)continue;let k=(r>g&&r>b)?0:(g>r&&g>b)?1:(b>r&&b>g)?2:3;h[k*6+Math.min(5,Math.floor((r+g+b)/128))]++}let sum=h.reduce((a,b)=>a+b,0)||1;return h.map(x=>x/sum)}
+ function distance(a,b){return a.reduce((s,x,i)=>s+Math.abs(x-b[i]),0)}
+ async function photoMatch(file){results.innerHTML='<p class="note">نحلّل الصورة ونقارنها بصور المنتجات المتوفرة…</p>';const target=await createImageBitmap(file),th=histogram(target);target.close?.();let candidates=products.filter(p=>p.has_image).slice(0,160),scored=[];for(const p of candidates){try{const url=`${CFG.API_URL}/api/products/${encodeURIComponent(p.id)}/image`;const im=new Image();im.crossOrigin='anonymous';im.src=url;await im.decode();scored.push({p,score:distance(th,histogram(im))})}catch(e){}}scored.sort((a,b)=>a.score-b.score);showMatches(scored.slice(0,6).map(x=>x.p),'أقرب المنتجات بصرياً — تأكد من اختيار المنتج الصحيح');if(!scored.length)results.innerHTML='<div class="empty">لا توجد صور منتجات قابلة للمقارنة. تأكد أن صور المنتجات محفوظة في المتجر.</div>'}
+ document.getElementById('takePhoto').onclick=async()=>{if(!video.videoWidth)return toast('شغّل الكاميرا أولاً');const c=document.getElementById('photoCanvas');c.width=video.videoWidth;c.height=video.videoHeight;c.getContext('2d').drawImage(video,0,0);c.toBlob(b=>photoMatch(b),'image/jpeg',.82);};
+ photoFile.onchange=()=>{if(photoFile.files?.[0])photoMatch(photoFile.files[0])};
+})();
 </script></body></html>
