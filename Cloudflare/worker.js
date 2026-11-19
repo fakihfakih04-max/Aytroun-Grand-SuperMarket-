@@ -1,6 +1,7 @@
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':'*','access-control-allow-headers':'content-type,authorization,x-hub-signature-256','access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS'}});
 const enc=s=>new TextEncoder().encode(s);
+const isVegFruitCategory=value=>/(vegetable|vegetables|fruit|fruits|خضار|خضروات|فاكهة|فواكه)/i.test(String(value||''));
 
 async function sign(payload,secret){
  const key=await crypto.subtle.importKey('raw',enc(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
@@ -199,7 +200,7 @@ export default {
       return json({error:'Compressed image too large for D1 row: '+String(x.name)},413);
 
      const qty=Number(x.quantity||0);
-     batch.push(stmt.bind(String(x.id),String(x.name),x.category||'',x.code||'',x.barcode||'',x.barcode_pac||'',x.barcode_box||'',x.currency||'USD',image,x.pc??null,x.pac??null,x.box??null,x.pac_qty??null,x.box_qty??null,x.description||'',qty,1,x.unit_type==='KG'?'KG':'PC',x.weight_mode==='employee'?'employee':'customer',1));
+     batch.push(stmt.bind(String(x.id),String(x.name),x.category||'',x.code||'',x.barcode||'',x.barcode_pac||'',x.barcode_box||'',x.currency||'USD',image,x.pc??null,x.pac??null,x.box??null,x.pac_qty??null,x.box_qty??null,x.description||'',qty,1,(isVegFruitCategory(x.category)||x.unit_type==='KG')?'KG':'PC',x.weight_mode==='employee'?'employee':'customer',1));
     }
 
     if(batch.length)await env.DB.batch(batch);
@@ -221,7 +222,7 @@ export default {
      pac_qty=excluded.pac_qty,box_qty=excluded.box_qty,description=excluded.description,
      quantity=excluded.quantity,available=excluded.available,unit_type=excluded.unit_type,
      weight_mode=excluded.weight_mode,is_visible=COALESCE(products.is_visible,1),updated_at=CURRENT_TIMESTAMP`)
-     .bind(String(b.id),b.name,b.category||'',b.code||'',b.barcode||'',b.barcode_pac||'',b.barcode_box||'',b.currency||'USD',b.image||'',b.pc??null,b.pac??null,b.box??null,b.pac_qty??null,b.box_qty??null,b.description||'',Number(b.quantity??0),Number(b.available??1),b.unit_type==='KG'?'KG':'PC',b.weight_mode==='employee'?'employee':'customer',Number(b.is_visible??1)).run();
+     .bind(String(b.id),b.name,b.category||'',b.code||'',b.barcode||'',b.barcode_pac||'',b.barcode_box||'',b.currency||'USD',b.image||'',b.pc??null,b.pac??null,b.box??null,b.pac_qty??null,b.box_qty??null,b.description||'',Number(b.quantity??0),Number(b.available??1),(isVegFruitCategory(b.category)||b.unit_type==='KG')?'KG':'PC',b.weight_mode==='employee'?'employee':'customer',Number(b.is_visible??1)).run();
 
     return json({ok:true});
    }
