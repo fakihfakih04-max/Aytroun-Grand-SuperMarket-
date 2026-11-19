@@ -22,6 +22,8 @@
 @media(max-width:600px){body{background:#043719}.top{padding:5px 10px;min-height:44px;justify-content:flex-end}.logo-banner img{max-height:160px;width:96%}.announcement{margin:9px auto 8px;padding:10px 12px;font-size:17px}.wrap{padding:8px 9px 94px}.toolbar{margin:8px 0}.search{min-width:100%;padding:12px}.toolbar .select{flex:1}.category-chip{min-width:82px;padding:8px 10px}.promo-hero{height:118px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:9px;align-items:stretch}.card{min-width:0}.photo{height:132px}.body{min-width:0}.name{overflow-wrap:anywhere}.photo{height:125px;padding:6px}.body{padding:9px;gap:6px}.name{font-size:13px;min-height:38px}.foot{flex-direction:column}.foot .btn{padding:9px 7px;font-size:12px}.price b span:first-child{font-size:13px}.price small{font-size:11px}.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:linear-gradient(120deg,#032e17,#075326);border-top:1px solid #e2bd50;padding:7px 4px calc(7px + env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -5px 18px #001d0e44}.bottom-nav button{background:transparent;color:#fff;border:0;display:grid;gap:1px;justify-items:center;font-size:11px;font-weight:800;padding:4px 7px}.bottom-nav button .nav-icon{font-size:22px}.bottom-nav button.active{background:linear-gradient(135deg,#ffe58a,#e5b52f);color:#12361d;border-radius:14px;min-width:65px}.splash img{max-height:76vh;width:96vw}.splash-groceries{margin-top:12px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}}
 
 .scan-result{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #dfe8df;border-radius:13px;background:#fff;margin:8px 0}.scan-result img{width:68px;height:68px;object-fit:contain;border-radius:9px;background:#f4f7f4}.scan-result .grow{flex:1;min-width:0}.scan-result button{white-space:nowrap}
+
+.new-offer-ribbon{margin:12px 0 18px;overflow:hidden;white-space:nowrap;background:linear-gradient(90deg,#f7df91,#fff0bf,#e7bd4b);color:#173c24;border:1px solid #d6ad42;border-radius:12px;padding:11px 0;font-weight:1000;font-size:17px;box-shadow:0 5px 16px #0002}.new-offer-ribbon span{display:inline-block;padding-left:100%;animation:offerTicker 16s linear infinite}@keyframes offerTicker{from{transform:translateX(0)}to{transform:translateX(-100%)}}.highlight-block{margin:15px 0 24px}.highlight-block .grid{margin-top:8px}.offer-card{position:relative;border:2px solid #e4bd4d}.offer-tag{position:absolute;top:9px;right:9px;background:#b51e27;color:white;border-radius:20px;padding:5px 10px;font-weight:900;z-index:2;font-size:12px}.offer-old{text-decoration:line-through;color:#89938c;font-size:12px}.offer-price{color:#b51e27;font-size:20px;font-weight:1000}
 </style></head><body>
 <div id="splash" class="splash"><img src="assets/store-logo.png" alt="Aytroun Grand SuperMarket"><div class="spinner"></div></div>
 <header class="top"><div class="brand-title" aria-hidden="true"></div><div style="display:flex;align-items:center;gap:8px"><a id="adminBtnTop" href="./admin.html" class="btn gold" style="text-decoration:none;white-space:nowrap">⚙ الإدارة</a><button id="install" class="btn gold" hidden>تثبيت التطبيق</button> <button id="cartBtn" class="btn light">🛒 <span id="count">0</span></button></div></header>
@@ -33,7 +35,10 @@
 <div class="toolbar"><input id="search" class="search" placeholder="ابحث عن منتج أو تصنيف..."><button id="openBarcode" class="btn gold" type="button">▦ مسح باركود</button><button id="openPhoto" class="btn light" type="button">📷 تصوير منتج</button><select id="category" class="select"><option value="">كل التصنيفات</option></select><select id="sort" class="select"><option value="name">الاسم</option><option value="price">السعر: الأقل أولاً</option></select></div>
 <nav id="categoryStrip" class="category-strip" aria-label="التصنيفات"></nav>
 <div class="promo-hero"><span>🛒 اختاروا الأفضل لعائلتكم</span></div>
-<div class="section-head"><h2>عروض مميزة</h2><span>🏷️</span></div>
+<div class="new-offer-ribbon"><span>✨ عرض جديد · عروض يومية من تعاونية عيترون الكبرى ✨</span></div>
+<section class="highlight-block"><div class="section-head"><h2>🔥 عروض اليوم</h2><span>🏷️</span></div><div id="dailyOffers" class="grid"></div></section>
+<section class="highlight-block"><div class="section-head"><h2>🆕 وصل حديثاً</h2><span>✨</span></div><div id="latestProduct" class="grid"></div></section>
+<div class="section-head"><h2>كل المنتجات</h2><span>🛒</span></div>
 <p class="muted" id="countText">جارٍ تحميل المنتجات...</p><section id="products" class="grid"></section></main><footer>Aytroun Grand SuperMarket · أهلاً وسهلاً بكم</footer>
 <nav class="bottom-nav"><button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="nav-icon">⌂</span>الرئيسية</button><button onclick="document.getElementById('categoryStrip').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">▦</span>التصنيفات</button><button onclick="document.getElementById('search').focus()"><span class="nav-icon">⌕</span>بحث</button><button onclick="document.getElementById('cartBtn').click()"><span class="nav-icon">🛒</span>السلة</button><button id="accountBtn" type="button"><span class="nav-icon">♙</span>حسابي</button><a id="adminBtnMobile" href="./admin.html" style="background:transparent;color:#fff;border:0;display:grid;gap:1px;justify-items:center;text-decoration:none;font-size:11px;font-weight:800;padding:4px 7px"><span class="nav-icon" style="font-size:22px">⚙</span>الإدارة</a></nav>
 <div id="overlay" class="overlay"><aside class="drawer"><div class="head"><h2>طلبك</h2><div style="display:flex;align-items:center;gap:8px"><button id="backToShop" class="btn light" type="button">→ متابعة التسوق</button><button id="close" class="close" type="button" aria-label="إغلاق السلة">×</button></div></div><div id="items"></div><div class="total"><span>المجموع</span><span id="subtotal">$0.00</span></div><div class="total"><span>التوصيل</span><span id="deliveryFee">—</span></div><div class="total"><span>الإجمالي</span><span id="grandTotal">—</span></div><p class="note">Delivery fee is calculated from the selected area. Stock quantities are never displayed.</p><h3>معلومات الزبون</h3>
@@ -57,13 +62,13 @@
 <div id="scanResults" style="margin-top:14px"></div>
 </aside></div><div id="toast" class="toast"></div>
 <script src="config.js"></script><script>
-const CFG=window.SFF_CONFIG||{};let products=[],cart=[],installPrompt=null,storeSettings={},deliveryAreas=[];
+const CFG=window.SFF_CONFIG||{};let products=[],cart=[],installPrompt=null,storeSettings={},deliveryAreas=[],storeHighlights={latest:null,offers:[]};
 const money=(v,c="USD")=>new Intl.NumberFormat("en-US",{style:"currency",currency:c,maximumFractionDigits:2}).format(Number(v||0));
 const fxRate=()=>Math.max(1,Number(storeSettings.exchange_rate||89500));
 const roundedLBP=v=>{let step=Math.max(1,Number(storeSettings.lbp_rounding||1000));return Math.round(Number(v||0)/step)*step};
 const dualMoney=(v,c)=>{let n=Number(v||0),usd=c==='LBP'?n/fxRate():n,lbp=c==='LBP'?n:n*fxRate();return `<span>${money(usd,'USD')}</span><br><small class="hint">${Math.round(roundedLBP(lbp)).toLocaleString('en-US')} LBP</small>`};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const price=(p,u)=>p.prices?.[u]??p[u+"_price"]??null, pack=(p,u)=>p.pack_sizes?.[u]??p[u+"_qty"]??null;
+const price=(p,u)=>{if(u==='pc'){const offer=(storeHighlights.offers||[]).find(o=>String(o.product_id)===String(p.id));if(offer)return Number(offer.offer_price)}return p.prices?.[u]??p[u+'_price']??p[u]??null}, pack=(p,u)=>p.pack_sizes?.[u]??p[u+"_qty"]??null;
 function toast(s){let e=document.getElementById("toast");e.textContent=s;e.style.display="block";setTimeout(()=>e.style.display="none",2500)}
 function applyStoreSettings(){if(storeSettings.logo)document.querySelector('.logo-banner img').src=storeSettings.logo;deliveryArea.innerHTML='<option value="">اختر المنطقة</option>'+deliveryAreas.map(a=>`<option value="${esc(a.id)}">${esc(a.name)} · ${money(a.fee,a.currency)}</option>`).join("");let catCfg={};try{catCfg=JSON.parse(storeSettings.category_config||'{}')}catch{};products=products.filter(p=>!(catCfg[p.category]||{}).hidden);let cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort();document.getElementById('category').innerHTML='<option value="">كل التصنيفات</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(catCfg[c]?.name||c)}</option>`).join("");document.getElementById('categoryStrip').innerHTML='<button class="category-chip active" data-cat=""><span class="cat-icon">🛒</span><span class="cat-label">كل المنتجات</span></button>'+cats.map(c=>{let n=catCfg[c]?.name||c;let icon=/fruit|فاكه/i.test(c)?'🍎':/veg|خض/i.test(c)?'🥬':/drink|مشروب|soft/i.test(c)?'🥤':/dairy|cheese|لبن|أجبان/i.test(c)?'🧀':/clean|منظف/i.test(c)?'🧴':'🛍️';let picture=catCfg[c]?.image?`<img class="cat-picture" loading="lazy" src="${esc(catCfg[c].image)}" alt="${esc(n)}">`:`<span class="cat-icon">${icon}</span>`;return `<button class="category-chip" data-cat="${esc(c)}">${picture}<span class="cat-label">${esc(n)}</span></button>`}).join("");document.querySelectorAll('.category-chip').forEach(b=>b.onclick=()=>{category.value=b.dataset.cat;document.querySelectorAll('.category-chip').forEach(x=>x.classList.toggle('active',x===b));draw()});draw()}
 async function load(){
@@ -72,12 +77,15 @@ async function load(){
    const pr=await fetch(CFG.API_URL+"/api/products");
    if(pr.ok){const d=await pr.json();products=d.products||[];}
    draw();document.getElementById("splash")?.classList.add("hide");
-   Promise.all([fetch(CFG.API_URL+"/api/settings"),fetch(CFG.API_URL+"/api/areas")]).then(async([sr,ar])=>{if(sr.ok)storeSettings=await sr.json();if(ar.ok){const d=await ar.json();deliveryAreas=d.areas||[];}applyStoreSettings();}).catch(console.warn);
+   Promise.all([fetch(CFG.API_URL+"/api/settings"),fetch(CFG.API_URL+"/api/areas"),fetch(CFG.API_URL+"/api/store/highlights")]).then(async([sr,ar,hr])=>{if(sr.ok)storeSettings=await sr.json();if(ar.ok){const d=await ar.json();deliveryAreas=d.areas||[];}if(hr.ok)storeHighlights=await hr.json();applyStoreSettings();renderHighlights();}).catch(console.warn);
   }
  }catch(e){console.warn("Backend unavailable; trying static catalog",e);}
  if(!products.length){try{const r=await fetch(CFG.PRODUCTS_URL||"data/products.json",{cache:"no-store"});const d=await r.json();products=Array.isArray(d)?d:(d.products||[]);}catch(e){products=[];}}
  document.getElementById("splash")?.classList.add("hide");applyStoreSettings();
 }
+
+function renderHighlights(){const card=p=>{if(!p)return '';let image=p.has_image?`${CFG.API_URL}/api/products/${encodeURIComponent(p.id)}/image`:(p.image||'assets/icon.svg');return `<article class="card"><div class="photo"><img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy"></div><div class="body"><div class="name">${esc(p.name)}</div><div class="prices"><b>${dualMoney(price(p,'pc'),p.currency||'USD')}</b></div><button class="btn primary" onclick="document.getElementById('search').value=${JSON.stringify(p.name)};draw();document.getElementById('products').scrollIntoView({behavior:'smooth'})">عرض المنتج</button></div></article>`};let offers=storeHighlights.offers||[];document.getElementById('dailyOffers').innerHTML=offers.length?offers.map(o=>{let p=products.find(x=>String(x.id)===String(o.product_id))||o;let img=p.has_image?`${CFG.API_URL}/api/products/${encodeURIComponent(o.product_id)}/image`:'assets/icon.svg';return `<article class="card offer-card"><div class="offer-tag">عرض خاص</div><div class="photo"><img src="${esc(img)}" alt="${esc(o.name)}" loading="lazy"></div><div class="body"><div class="name">${esc(o.name)}</div><div class="offer-old">السعر السابق: ${dualMoney(p.pc,p.currency||'USD')}</div><div class="offer-price">سعر العرض: ${dualMoney(o.offer_price,p.currency||'USD')}</div><button class="btn primary" onclick="document.getElementById('search').value=${JSON.stringify(o.name)};draw();document.getElementById('products').scrollIntoView({behavior:'smooth'})">شاهد المنتج</button></div></article>`}).join(''):'<div class="empty" style="grid-column:1/-1">ترقبوا عروضنا اليومية قريباً 🌟</div>';let latest=storeHighlights.latest;document.getElementById('latestProduct').innerHTML=latest?card(latest):'<div class="empty" style="grid-column:1/-1">سيظهر هنا آخر صنف جديد عند إضافته.</div>'}
+
 let visibleLimit=60,filteredProducts=[];
 function draw(){
  let q=search.value.toLowerCase().trim(),cat=category.value,arr=products.filter(p=>(!cat||p.category===cat)&&[p.name,p.category,p.code,p.barcode].some(v=>String(v||"").toLowerCase().includes(q)));
@@ -231,7 +239,7 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
  const results=document.getElementById('scanResults'),manual=document.getElementById('scanManual'),photoFile=document.getElementById('photoFile');
  let stream=null,detector=null,scanLoop=false,mode='barcode';
  const stop=()=>{scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null;video.style.display='none';placeholder.style.display='block';};
- const open=(m)=>{mode=m;modal.classList.add('open');results.innerHTML='';manual.style.display=m==='barcode'?'block':'none';document.getElementById('scanTitle').textContent=m==='barcode'?'مسح الباركود':'التعرّف على صورة المنتج';document.getElementById('scanHelp').textContent=m==='barcode'?'وجّه الكاميرا نحو باركود المنتج.':'صوّر اسم المنتج أو العلامة التجارية بوضوح، وسنقرأ النص ونبحث عنه في المنتجات.'';document.getElementById('takePhoto').hidden=m!=='photo';document.getElementById('startScan').textContent=m==='barcode'?'تشغيل ماسح الباركود':'فتح الكاميرا';};
+ const open=(m)=>{mode=m;modal.classList.add('open');results.innerHTML='';manual.style.display=m==='barcode'?'block':'none';document.getElementById('scanTitle').textContent=m==='barcode'?'مسح الباركود':'التعرّف على صورة المنتج';document.getElementById('scanHelp').textContent=m==='barcode'?'وجّه الكاميرا نحو باركود المنتج.':'صوّر المنتج بوضوح، وسنقارن الصورة بصور المنتجات المسجلة بالمتجر.';document.getElementById('takePhoto').hidden=m!=='photo';document.getElementById('startScan').textContent=m==='barcode'?'تشغيل ماسح الباركود':'فتح الكاميرا';};
  const close=()=>{stop();modal.classList.remove('open')};
  document.getElementById('openBarcode').onclick=()=>open('barcode');
  document.getElementById('openPhoto').onclick=()=>open('photo');
@@ -244,34 +252,7 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
  document.getElementById('startScan').onclick=startCamera;
  function histogram(img){const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});c.width=24;c.height=24;ctx.drawImage(img,0,0,24,24);const d=ctx.getImageData(0,0,24,24).data,h=new Array(24).fill(0);for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];if(r>245&&g>245&&b>245)continue;let k=(r>g&&r>b)?0:(g>r&&g>b)?1:(b>r&&b>g)?2:3;h[k*6+Math.min(5,Math.floor((r+g+b)/128))]++}let sum=h.reduce((a,b)=>a+b,0)||1;return h.map(x=>x/sum)}
  function distance(a,b){return a.reduce((s,x,i)=>s+Math.abs(x-b[i]),0)}
-
- async function photoMatch(file){
-   if(!file)return;
-   results.innerHTML='<p class="note">⏳ عم نقرأ اسم المنتج من الصورة…</p>';
-   try{
-     if(!window.Tesseract) await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('تعذّر تحميل محرك قراءة النصوص. تأكد من الإنترنت.'));document.head.appendChild(sc)});
-     const worker=await Tesseract.createWorker('eng+ara',1,{logger:m=>{if(m.status==='recognizing text')results.innerHTML='<p class="note">⏳ قراءة اسم المنتج… '+Math.round((m.progress||0)*100)+'%</p>'}});
-     const out=await worker.recognize(file);
-     await worker.terminate();
-     const raw=(out.data.text||'').trim();
-     const norm=v=>String(v||'').toLocaleLowerCase().normalize('NFKD').replace(/[ًٌٍَُِّْـ]/g,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-     const query=norm(raw), words=query.split(/\s+/).filter(w=>w.length>1);
-     if(!words.length){results.innerHTML='<div class="empty">ما قدرت اقرأ اسم المنتج. قرّب الكاميرا على الاسم وصوّر بإضاءة أوضح.</div>';return}
-     const ranked=products.map(p=>{
-       const name=norm(p.name), code=norm([p.barcode,p.code].join(' ')), desc=norm(p.description);
-       let score=0;
-       for(const w of words){if(name.includes(w))score+=w.length>=5?5:3;else if(desc.includes(w))score+=1.5;else if(code.includes(w))score+=7}
-       if(name&&query.includes(name))score+=10;
-       const nameWords=name.split(/\s+/);
-       const coverage=nameWords.filter(w=>w.length>1&&words.some(q=>w.includes(q)||q.includes(w))).length/Math.max(1,nameWords.filter(w=>w.length>1).length);
-       score+=coverage*4;
-       return {p,score};
-     }).filter(x=>x.score>=3).sort((a,b)=>b.score-a.score).slice(0,8);
-     if(!ranked.length){results.innerHTML='<div class="empty">قرأت النص: <b>'+esc(raw)+'</b><br>لكن ما لقيت منتجاً مطابقاً. جرّب صورة أوضح للاسم.</div>';return}
-     showMatches(ranked.map(x=>x.p),'المنتجات المطابقة للاسم المقروء');
-     results.insertAdjacentHTML('afterbegin','<p class="note">النص المقروء: <b>'+esc(raw)+'</b></p>');
-   }catch(e){console.error(e);results.innerHTML='<div class="empty">'+esc(e.message||'تعذّرت قراءة الصورة')+'</div>'}
- }
+ async function photoMatch(file){results.innerHTML='<p class="note">نحلّل الصورة ونقارنها بصور المنتجات المتوفرة…</p>';const target=await createImageBitmap(file),th=histogram(target);target.close?.();let candidates=products.filter(p=>p.has_image).slice(0,160),scored=[];for(const p of candidates){try{const url=`${CFG.API_URL}/api/products/${encodeURIComponent(p.id)}/image`;const im=new Image();im.crossOrigin='anonymous';im.src=url;await im.decode();scored.push({p,score:distance(th,histogram(im))})}catch(e){}}scored.sort((a,b)=>a.score-b.score);showMatches(scored.slice(0,6).map(x=>x.p),'أقرب المنتجات بصرياً — تأكد من اختيار المنتج الصحيح');if(!scored.length)results.innerHTML='<div class="empty">لا توجد صور منتجات قابلة للمقارنة. تأكد أن صور المنتجات محفوظة في المتجر.</div>'}
  document.getElementById('takePhoto').onclick=async()=>{if(!video.videoWidth)return toast('شغّل الكاميرا أولاً');const c=document.getElementById('photoCanvas');c.width=video.videoWidth;c.height=video.videoHeight;c.getContext('2d').drawImage(video,0,0);c.toBlob(b=>photoMatch(b),'image/jpeg',.82);};
  photoFile.onchange=()=>{if(photoFile.files?.[0])photoMatch(photoFile.files[0])};
 })();

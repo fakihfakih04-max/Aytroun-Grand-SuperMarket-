@@ -1,4 +1,4 @@
-const CACHE="aytroun-store-pwa-v4";
+const CACHE="aytroun-store-pwa-v5";
 const STATIC=["./","./index.html","./config.js","./manifest.webmanifest","./assets/app-icon-192.png","./assets/app-icon-512.png","./assets/store-logo.png"];
 self.addEventListener("install",event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(STATIC)));
