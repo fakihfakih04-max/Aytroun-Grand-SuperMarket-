@@ -68,7 +68,7 @@ export default {
 
    // Store products
    if(p==='/api/products'&&req.method==='GET'){
-    const raw=await rows(env.DB,"SELECT id,name,category,code,barcode,currency,pc,pac,box,pac_qty,box_qty,description,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products WHERE available=1 AND is_visible=1 ORDER BY name");
+    const raw=await rows(env.DB,"SELECT id,name,category,code,barcode,barcode_pac,barcode_box,currency,pc,pac,box,pac_qty,box_qty,description,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products WHERE available=1 AND is_visible=1 ORDER BY name");
     const cfg=await rows(env.DB,"SELECT value FROM settings WHERE key='category_config'");
     let hidden={};
     try{hidden=JSON.parse(cfg[0]?.value||'{}')}catch{}
@@ -84,7 +84,14 @@ export default {
    // Admin products
    if(p==='/api/admin/products'&&req.method==='GET'){
     if(!await authorized(req,env))return json({error:'Unauthorized'},401);
-    return json({products:await rows(env.DB,"SELECT id,name,category,code,barcode,currency,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products ORDER BY name")});
+    return json({products:await rows(env.DB,"SELECT id,name,category,code,barcode,barcode_pac,barcode_box,currency,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products ORDER BY name")});
+   }
+
+   // Latest product and active daily offers (public)
+   if(p==='/api/store/highlights'&&req.method==='GET'){
+    const latest=await env.DB.prepare("SELECT id,name,category,code,barcode,currency,pc,pac,box,pac_qty,box_qty,description,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products WHERE available=1 AND is_visible=1 ORDER BY rowid DESC LIMIT 1").first();
+    const offers=await rows(env.DB,`SELECT o.id,o.product_id,o.title,o.offer_price,o.start_date,o.end_date,p.name,p.category,p.currency,p.pc,p.pac,p.box,p.image IS NOT NULL AND p.image<>'' AS has_image FROM offers o JOIN products p ON p.id=o.product_id WHERE o.active=1 AND p.available=1 AND p.is_visible=1 AND (o.start_date IS NULL OR o.start_date='' OR o.start_date<=date('now','localtime')) AND (o.end_date IS NULL OR o.end_date='' OR o.end_date>=date('now','localtime')) ORDER BY o.created_at DESC`);
+    return json({latest,offers});
    }
 
    if(p==='/api/settings'&&req.method==='GET'){
@@ -112,6 +119,19 @@ export default {
    if(p.startsWith('/api/')&&!await authorized(req,env))
     return json({error:'Unauthorized'},401);
 
+   // Admin offers management
+   if(p==='/api/admin/offers'&&req.method==='GET')
+    return json({offers:await rows(env.DB,`SELECT o.*,p.name AS product_name FROM offers o LEFT JOIN products p ON p.id=o.product_id ORDER BY o.created_at DESC`)});
+   if(p==='/api/admin/offers'&&req.method==='POST'){
+    const b=await req.json(); if(!b.product_id||b.offer_price===undefined||b.offer_price===null)return json({error:'Choose product and offer price'},400);
+    const id=b.id||crypto.randomUUID();
+    await env.DB.prepare(`INSERT INTO offers(id,product_id,title,offer_price,start_date,end_date,active,created_at) VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET product_id=excluded.product_id,title=excluded.title,offer_price=excluded.offer_price,start_date=excluded.start_date,end_date=excluded.end_date,active=excluded.active`).bind(id,String(b.product_id),b.title||'عرض يومي',Number(b.offer_price),b.start_date||'',b.end_date||'',Number(b.active??1)).run();
+    return json({ok:true,id});
+   }
+   if(p.startsWith('/api/admin/offers/')&&req.method==='DELETE'){
+    await env.DB.prepare('DELETE FROM offers WHERE id=?').bind(decodeURIComponent(p.split('/').pop())).run(); return json({ok:true});
+   }
+
    // Show/hide selected products
    if(p==='/api/products/visibility'&&req.method==='PUT'){
     const b=await req.json();
@@ -134,10 +154,10 @@ export default {
     if(!Array.isArray(b.items)||b.items.length<1||b.items.length>25)
      return json({error:'Send between 1 and 25 products per request'},400);
 
-    const stmt=env.DB.prepare(`INSERT INTO products(id,name,category,code,barcode,currency,image,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,updated_at)
-     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+    const stmt=env.DB.prepare(`INSERT INTO products(id,name,category,code,barcode,barcode_pac,barcode_box,currency,image,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,updated_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
      ON CONFLICT(id) DO UPDATE SET
-     name=excluded.name,category=excluded.category,code=excluded.code,barcode=excluded.barcode,
+     name=excluded.name,category=excluded.category,code=excluded.code,barcode=excluded.barcode,barcode_pac=excluded.barcode_pac,barcode_box=excluded.barcode_box,
      currency=excluded.currency,
      image=CASE WHEN excluded.image IS NOT NULL AND excluded.image<>'' THEN excluded.image ELSE products.image END,
      pc=excluded.pc,pac=excluded.pac,box=excluded.box,pac_qty=excluded.pac_qty,box_qty=excluded.box_qty,
@@ -153,7 +173,7 @@ export default {
       return json({error:'Compressed image too large for D1 row: '+String(x.name)},413);
 
      const qty=Number(x.quantity||0);
-     batch.push(stmt.bind(String(x.id),String(x.name),x.category||'',x.code||'',x.barcode||'',x.currency||'USD',image,x.pc??null,x.pac??null,x.box??null,x.pac_qty??null,x.box_qty??null,x.description||'',qty,1,x.unit_type==='KG'?'KG':'PC',x.weight_mode==='employee'?'employee':'customer',1));
+     batch.push(stmt.bind(String(x.id),String(x.name),x.category||'',x.code||'',x.barcode||'',x.barcode_pac||'',x.barcode_box||'',x.currency||'USD',image,x.pc??null,x.pac??null,x.box??null,x.pac_qty??null,x.box_qty??null,x.description||'',qty,1,x.unit_type==='KG'?'KG':'PC',x.weight_mode==='employee'?'employee':'customer',1));
     }
 
     if(batch.length)await env.DB.batch(batch);
@@ -167,15 +187,15 @@ export default {
     if((b.image||'').length>500000)
      return json({error:'Image too large; choose a smaller image'},413);
 
-    await env.DB.prepare(`INSERT INTO products(id,name,category,code,barcode,currency,image,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,updated_at)
-     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+    await env.DB.prepare(`INSERT INTO products(id,name,category,code,barcode,barcode_pac,barcode_box,currency,image,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,updated_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
      ON CONFLICT(id) DO UPDATE SET
-     name=excluded.name,category=excluded.category,code=excluded.code,barcode=excluded.barcode,
+     name=excluded.name,category=excluded.category,code=excluded.code,barcode=excluded.barcode,barcode_pac=excluded.barcode_pac,barcode_box=excluded.barcode_box,
      currency=excluded.currency,image=excluded.image,pc=excluded.pc,pac=excluded.pac,box=excluded.box,
      pac_qty=excluded.pac_qty,box_qty=excluded.box_qty,description=excluded.description,
      quantity=excluded.quantity,available=excluded.available,unit_type=excluded.unit_type,
      weight_mode=excluded.weight_mode,is_visible=COALESCE(products.is_visible,1),updated_at=CURRENT_TIMESTAMP`)
-     .bind(String(b.id),b.name,b.category||'',b.code||'',b.barcode||'',b.currency||'USD',b.image||'',b.pc??null,b.pac??null,b.box??null,b.pac_qty??null,b.box_qty??null,b.description||'',Number(b.quantity??0),Number(b.available??1),b.unit_type==='KG'?'KG':'PC',b.weight_mode==='employee'?'employee':'customer',Number(b.is_visible??1)).run();
+     .bind(String(b.id),b.name,b.category||'',b.code||'',b.barcode||'',b.barcode_pac||'',b.barcode_box||'',b.currency||'USD',b.image||'',b.pc??null,b.pac??null,b.box??null,b.pac_qty??null,b.box_qty??null,b.description||'',Number(b.quantity??0),Number(b.available??1),b.unit_type==='KG'?'KG':'PC',b.weight_mode==='employee'?'employee':'customer',Number(b.is_visible??1)).run();
 
     return json({ok:true});
    }
