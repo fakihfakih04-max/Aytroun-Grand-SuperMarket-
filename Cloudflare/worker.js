@@ -94,7 +94,16 @@ export default {
    // Admin products
    if(p==='/api/admin/products'&&req.method==='GET'){
     if(!await authorized(req,env))return json({error:'Unauthorized'},401);
-    return json({products:await rows(env.DB,"SELECT id,name,category,code,barcode,barcode_pac,barcode_box,currency,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at FROM products ORDER BY name")});
+    const limit=Math.min(200,Math.max(1,Number(u.searchParams.get('limit')||100)));
+    const offset=Math.max(0,Number(u.searchParams.get('offset')||0));
+    const q=(u.searchParams.get('q')||'').trim();
+    const columns="id,name,category,code,barcode,barcode_pac,barcode_box,currency,pc,pac,box,pac_qty,box_qty,description,quantity,available,unit_type,weight_mode,is_visible,CASE WHEN image IS NOT NULL AND image<>'' THEN 1 ELSE 0 END AS has_image,updated_at";
+    let products,total;
+    if(q){const like='%'+q+'%';const where=' WHERE name LIKE ? OR category LIKE ? OR code LIKE ? OR barcode LIKE ? OR barcode_pac LIKE ? OR barcode_box LIKE ? OR id LIKE ?';
+     total=await env.DB.prepare('SELECT COUNT(*) AS n FROM products'+where).bind(like,like,like,like,like,like,like).first();
+     products=await rows(env.DB,'SELECT '+columns+' FROM products'+where+' ORDER BY name LIMIT ? OFFSET ?',like,like,like,like,like,like,like,limit,offset);
+    }else{total=await env.DB.prepare('SELECT COUNT(*) AS n FROM products').first();products=await rows(env.DB,'SELECT '+columns+' FROM products ORDER BY name LIMIT ? OFFSET ?',limit,offset)}
+    return json({products,total:Number(total?.n||0),limit,offset});
    }
 
    // Latest product and active daily offers (public)
