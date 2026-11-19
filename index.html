@@ -231,7 +231,7 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
  const results=document.getElementById('scanResults'),manual=document.getElementById('scanManual'),photoFile=document.getElementById('photoFile');
  let stream=null,detector=null,scanLoop=false,mode='barcode';
  const stop=()=>{scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null;video.style.display='none';placeholder.style.display='block';};
- const open=(m)=>{mode=m;modal.classList.add('open');results.innerHTML='';manual.style.display=m==='barcode'?'block':'none';document.getElementById('scanTitle').textContent=m==='barcode'?'مسح الباركود':'التعرّف على صورة المنتج';document.getElementById('scanHelp').textContent=m==='barcode'?'وجّه الكاميرا نحو باركود المنتج.':'صوّر المنتج بوضوح، وسنقارن الصورة بصور المنتجات المسجلة بالمتجر.';document.getElementById('takePhoto').hidden=m!=='photo';document.getElementById('startScan').textContent=m==='barcode'?'تشغيل ماسح الباركود':'فتح الكاميرا';};
+ const open=(m)=>{mode=m;modal.classList.add('open');results.innerHTML='';manual.style.display=m==='barcode'?'block':'none';document.getElementById('scanTitle').textContent=m==='barcode'?'مسح الباركود':'التعرّف على صورة المنتج';document.getElementById('scanHelp').textContent=m==='barcode'?'وجّه الكاميرا نحو باركود المنتج.':'صوّر اسم المنتج أو العلامة التجارية بوضوح، وسنقرأ النص ونبحث عنه في المنتجات.'';document.getElementById('takePhoto').hidden=m!=='photo';document.getElementById('startScan').textContent=m==='barcode'?'تشغيل ماسح الباركود':'فتح الكاميرا';};
  const close=()=>{stop();modal.classList.remove('open')};
  document.getElementById('openBarcode').onclick=()=>open('barcode');
  document.getElementById('openPhoto').onclick=()=>open('photo');
@@ -244,7 +244,34 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
  document.getElementById('startScan').onclick=startCamera;
  function histogram(img){const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});c.width=24;c.height=24;ctx.drawImage(img,0,0,24,24);const d=ctx.getImageData(0,0,24,24).data,h=new Array(24).fill(0);for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];if(r>245&&g>245&&b>245)continue;let k=(r>g&&r>b)?0:(g>r&&g>b)?1:(b>r&&b>g)?2:3;h[k*6+Math.min(5,Math.floor((r+g+b)/128))]++}let sum=h.reduce((a,b)=>a+b,0)||1;return h.map(x=>x/sum)}
  function distance(a,b){return a.reduce((s,x,i)=>s+Math.abs(x-b[i]),0)}
- async function photoMatch(file){results.innerHTML='<p class="note">نحلّل الصورة ونقارنها بصور المنتجات المتوفرة…</p>';const target=await createImageBitmap(file),th=histogram(target);target.close?.();let candidates=products.filter(p=>p.has_image).slice(0,160),scored=[];for(const p of candidates){try{const url=`${CFG.API_URL}/api/products/${encodeURIComponent(p.id)}/image`;const im=new Image();im.crossOrigin='anonymous';im.src=url;await im.decode();scored.push({p,score:distance(th,histogram(im))})}catch(e){}}scored.sort((a,b)=>a.score-b.score);showMatches(scored.slice(0,6).map(x=>x.p),'أقرب المنتجات بصرياً — تأكد من اختيار المنتج الصحيح');if(!scored.length)results.innerHTML='<div class="empty">لا توجد صور منتجات قابلة للمقارنة. تأكد أن صور المنتجات محفوظة في المتجر.</div>'}
+
+ async function photoMatch(file){
+   if(!file)return;
+   results.innerHTML='<p class="note">⏳ عم نقرأ اسم المنتج من الصورة…</p>';
+   try{
+     if(!window.Tesseract) await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('تعذّر تحميل محرك قراءة النصوص. تأكد من الإنترنت.'));document.head.appendChild(sc)});
+     const worker=await Tesseract.createWorker('eng+ara',1,{logger:m=>{if(m.status==='recognizing text')results.innerHTML='<p class="note">⏳ قراءة اسم المنتج… '+Math.round((m.progress||0)*100)+'%</p>'}});
+     const out=await worker.recognize(file);
+     await worker.terminate();
+     const raw=(out.data.text||'').trim();
+     const norm=v=>String(v||'').toLocaleLowerCase().normalize('NFKD').replace(/[ًٌٍَُِّْـ]/g,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+     const query=norm(raw), words=query.split(/\s+/).filter(w=>w.length>1);
+     if(!words.length){results.innerHTML='<div class="empty">ما قدرت اقرأ اسم المنتج. قرّب الكاميرا على الاسم وصوّر بإضاءة أوضح.</div>';return}
+     const ranked=products.map(p=>{
+       const name=norm(p.name), code=norm([p.barcode,p.code].join(' ')), desc=norm(p.description);
+       let score=0;
+       for(const w of words){if(name.includes(w))score+=w.length>=5?5:3;else if(desc.includes(w))score+=1.5;else if(code.includes(w))score+=7}
+       if(name&&query.includes(name))score+=10;
+       const nameWords=name.split(/\s+/);
+       const coverage=nameWords.filter(w=>w.length>1&&words.some(q=>w.includes(q)||q.includes(w))).length/Math.max(1,nameWords.filter(w=>w.length>1).length);
+       score+=coverage*4;
+       return {p,score};
+     }).filter(x=>x.score>=3).sort((a,b)=>b.score-a.score).slice(0,8);
+     if(!ranked.length){results.innerHTML='<div class="empty">قرأت النص: <b>'+esc(raw)+'</b><br>لكن ما لقيت منتجاً مطابقاً. جرّب صورة أوضح للاسم.</div>';return}
+     showMatches(ranked.map(x=>x.p),'المنتجات المطابقة للاسم المقروء');
+     results.insertAdjacentHTML('afterbegin','<p class="note">النص المقروء: <b>'+esc(raw)+'</b></p>');
+   }catch(e){console.error(e);results.innerHTML='<div class="empty">'+esc(e.message||'تعذّرت قراءة الصورة')+'</div>'}
+ }
  document.getElementById('takePhoto').onclick=async()=>{if(!video.videoWidth)return toast('شغّل الكاميرا أولاً');const c=document.getElementById('photoCanvas');c.width=video.videoWidth;c.height=video.videoHeight;c.getContext('2d').drawImage(video,0,0);c.toBlob(b=>photoMatch(b),'image/jpeg',.82);};
  photoFile.onchange=()=>{if(photoFile.files?.[0])photoMatch(photoFile.files[0])};
 })();
