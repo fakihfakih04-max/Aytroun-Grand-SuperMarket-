@@ -93,7 +93,7 @@ function draw(){
  filteredProducts=arr;countText.textContent=arr.length+" products";
  const shown=arr.slice(0,visibleLimit);
  productsEl.innerHTML=shown.length?shown.map(p=>{
-  const img=`<img class="lazy-product-image" data-product-image="${esc(p.id)}" alt="${esc(p.name)}" loading="lazy" src="assets/icon.svg">`;
+  const img=`<img class="lazy-product-image" data-product-image="${esc(p.id)}" data-product-image-version="${encodeURIComponent(p.updated_at||Date.now())}" alt="${esc(p.name)}" loading="lazy" src="assets/icon.svg">`;
   const lines=["pc","pac","box"].map(u=>price(p,u)==null?"":`<div class="price"><span>Retail / ${(effectiveUnitType(p)==='KG'&&u==='pc')?'KG':u.toUpperCase()}${u!=="pc"&&pack(p,u)?` <small class="hint">(${esc(pack(p,u))} pcs)</small>`:""}</span><b>${dualMoney(price(p,u),p.currency||"USD")}</b></div>`).join("");
   const isAvailable=Number(p.available??1)===1;
   return `<article class="card"><div class="photo">${img}</div><div class="body"><div class="name">${esc(p.name)}</div>${p.description?`<div class="muted">${esc(p.description)}</div>`:""}<div class="prices">${lines||'<small class="muted">Price unavailable</small>'}</div><div class="foot"><select id="u-${esc(p.id)}" ${!isAvailable?'disabled':''}><option value="pc">${effectiveUnitType(p)==='KG'?(p.weight_mode==='employee'?'بالقطعة · الوزن عند التحضير':'KG'):'PC'}</option>${price(p,"pac")!=null?'<option value="pac">PAC</option>':""}${price(p,"box")!=null?'<option value="box">BOX</option>':""}</select><button class="btn primary" onclick="add('${esc(p.id)}')" ${!isAvailable?'disabled':''}>${isAvailable?'أضف إلى السلة':'غير متوفر'}</button></div></div></article>`;
@@ -105,7 +105,7 @@ let imageObserver;
 function setupLazyImages(){if(imageObserver)imageObserver.disconnect();const imgs=[...document.querySelectorAll('img[data-product-image]')];if(!('IntersectionObserver'in window)){imgs.forEach(loadProductImage);return;}imageObserver=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){imageObserver.unobserve(e.target);loadProductImage(e.target)}}),{rootMargin:'250px'});imgs.forEach(img=>imageObserver.observe(img));}
 async function loadProductImage(img){
  if(img.dataset.loaded)return;img.dataset.loaded='1';
- const imageUrl=CFG.API_URL+'/api/products/'+encodeURIComponent(img.dataset.productImage)+'/image';
+ const imageUrl=CFG.API_URL+'/api/products/'+encodeURIComponent(img.dataset.productImage)+'/image?v='+(img.dataset.productImageVersion||Date.now());
  img.onerror=()=>{img.onerror=null;img.style.display='none';};
  img.src=imageUrl;
 }
@@ -113,7 +113,7 @@ async function loadProductImage(img){
 const productsEl=document.getElementById("products"),search=document.getElementById("search"),category=document.getElementById("category"),sort=document.getElementById("sort"),countText=document.getElementById("countText");
 function effectiveUnitType(p){
  const category=String(p?.category||'').trim().toLowerCase();
- if(/vegetable|vegetables|vegtable|vegtables|fruit|fruits|خضار|خضروات|فاكهة|فواكه/.test(category)) return 'KG';
+ if(category==='vegetables'||category==='fruits') return 'KG';
  return String(p?.unit_type||'PC').trim().toUpperCase();
 }
 function isFractionalProduct(p){
