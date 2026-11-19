@@ -91,6 +91,13 @@ export default {
     return product?json({product}):json({error:'Product not found'},404);
    }
 
+   // Admin category names: fetch distinct categories without loading all products
+   if(p==='/api/admin/categories'&&req.method==='GET'){
+    if(!await authorized(req,env))return json({error:'Unauthorized'},401);
+    const categories=await rows(env.DB,"SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND TRIM(category)<>'' ORDER BY category");
+    return json({categories:categories.map(x=>x.category)});
+   }
+
    // Admin products
    if(p==='/api/admin/products'&&req.method==='GET'){
     if(!await authorized(req,env))return json({error:'Unauthorized'},401);
