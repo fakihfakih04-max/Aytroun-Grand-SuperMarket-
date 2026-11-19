@@ -113,7 +113,7 @@ async function loadProductImage(img){
 const productsEl=document.getElementById("products"),search=document.getElementById("search"),category=document.getElementById("category"),sort=document.getElementById("sort"),countText=document.getElementById("countText");
 function effectiveUnitType(p){
  const category=String(p?.category||'').trim().toLowerCase();
- if(/vegetable|vegetables|fruit|fruits|خضار|خضروات|فاكهة|فواكه/.test(category)) return 'KG';
+ if(/vegetable|vegetables|vegtable|vegtables|fruit|fruits|خضار|خضروات|فاكهة|فواكه/.test(category)) return 'KG';
  return String(p?.unit_type||'PC').trim().toUpperCase();
 }
 function isFractionalProduct(p){
